@@ -1,10 +1,12 @@
 using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace api.Models;
 
 public class User
 {
     [Key]
+    [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
     public int Id {get;set;}
     [Required]
     [MaxLength(100)]
@@ -20,11 +22,22 @@ public class User
     [MaxLength(100)]
     public string LastName {get; set;} = "";
     public ICollection<Reservation> Reservations {get;set;} = [];
+    public ICollection<Role> Roles {get; set;} = [];
     
 }
-
+public class Role {
+    [Key]
+    [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
+    public int Id {get; set;}
+    [Required]
+    public required string Name {get; set;}
+    public ICollection<User> Users {get; set;} = [];
+}
 public class Room {
         [Key]
+        [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
+        public int Id {get; set;}
+        [Required]
         public int RoomNumber { get; set; }
         [Required]
         public RoomType RoomType { get; set; }
@@ -35,6 +48,7 @@ public class Room {
 public class Reservation
     {
         [Key]
+        [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
         public int Id { get; set; }
         [Required]
         public int UserId { get; set; }
@@ -56,6 +70,7 @@ public class Reservation
     public class Payment
     {
         [Key]
+        [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
         public int Id { get; set; }
         [Required]
         public int ReservationId { get; set; }

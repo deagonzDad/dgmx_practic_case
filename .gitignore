@@ -60,3 +60,6 @@ _ReSharper.Caches/
 *.trx
 *.coverage
 *.coveragexml
+
+#Db
+MyDatabase.db*
