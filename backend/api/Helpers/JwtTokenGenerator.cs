@@ -11,9 +11,10 @@ namespace api.Helpers;
 public class JwtTokenGenerator(IOptions<JwtSettings> jwtSettings)
 {
     private readonly JwtSettings _jwtSettings = jwtSettings.Value;
+
     public string GenerateToken(User user)
     {
-        List<string> listRoles = [..user.Roles.Select(r=>r.Name)];
+        List<string> listRoles = [.. user.Roles.Select(r => r.Name)];
         JwtSecurityTokenHandler tokenHandler = new();
         byte[] key = Encoding.ASCII.GetBytes(_jwtSettings.Key);
         List<Claim> claims =
@@ -34,11 +35,9 @@ public class JwtTokenGenerator(IOptions<JwtSettings> jwtSettings)
                 SecurityAlgorithms.HmacSha256Signature
             ),
             Issuer = _jwtSettings.Issuer,
-            Audience = _jwtSettings.Audience
+            Audience = _jwtSettings.Audience,
         };
         SecurityToken token = tokenHandler.CreateToken(tokenDescriptor);
         return tokenHandler.WriteToken(token);
     }
-
 }
-

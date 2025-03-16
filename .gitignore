@@ -63,3 +63,6 @@ _ReSharper.Caches/
 
 #Db
 MyDatabase.db*
+.fake
+
+Logs/

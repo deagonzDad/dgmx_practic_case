@@ -1,9 +1,9 @@
 using api.Data;
 using api.DTO.Users;
+using Microsoft.AspNetCore.Authorization;
 using api.Helpers;
 using api.Models;
-using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Http;
+
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
@@ -18,9 +18,11 @@ namespace api.Controllers
         private readonly JwtTokenGenerator _jwtTokenGenerator = jwtTokenGenerator;
         [AllowAnonymous]
         [HttpPost]
-        [Route("login")]
+        [Route("signup")]
 
-        public async Task<ActionResult<string>> Login([FromBody] UserCreateDTO login){
+        public async Task<ActionResult<string>> SignUp([FromBody] UserCreateDTO login)
+        {
+            //this code is incomplete for the result
             using var transaction = _dbContext.Database.BeginTransaction();
             try
             {
@@ -51,32 +53,35 @@ namespace api.Controllers
             catch (Exception excp)
             {
                 transaction.Rollback();
-                return StatusCode(StatusCodes.Status500InternalServerError, new {res = excp.Message});
+                return StatusCode(StatusCodes.Status500InternalServerError, new { res = excp.Message });
             }
         }
+
         [AllowAnonymous]
         [HttpPost]
-        [Route("signup")]
+        [Route("signIn")]
         public async Task<ActionResult<string>> SignIn([FromBody] UserSignInDTO signIn)
         {
             // using var transaction = await _dbContext.Database.BeginTransactionAsync();
             try
             {
-                if(!ModelState.IsValid){
+                if (!ModelState.IsValid)
+                {
                     return StatusCode(StatusCodes.Status500InternalServerError, new { res = ModelState });
                 }
-                User? user = await _dbContext.Users.Where(r=>r.Username == signIn.Username)
-                    .Include(a=>a.Roles).FirstOrDefaultAsync();
-                if(user == null || !PasswordHasher.VerifyPassword(signIn.Password, user.Password))
+                User? user = await _dbContext.Users.Where(r => r.Username == signIn.Username)
+                    .Include(a => a.Roles).FirstOrDefaultAsync();
+                if (user == null || !PasswordHasher.VerifyPassword(signIn.Password, user.Password))
                 {
                     return Unauthorized("Invalid Credentials");
                 }
                 string token = _jwtTokenGenerator.GenerateToken(user);
-                return Ok(new {Token = token});
+                return Ok(new { Token = token });
 
-            }catch(Exception res)
+            }
+            catch (Exception res)
             {
-                return StatusCode(StatusCodes.Status500InternalServerError, new {msg = res});
+                return StatusCode(StatusCodes.Status500InternalServerError, new { msg = res });
             }
         }
     }

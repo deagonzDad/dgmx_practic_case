@@ -1,4 +1,3 @@
-using System;
 using System.ComponentModel.DataAnnotations;
 
 namespace api.DTO.Users;
@@ -15,12 +14,14 @@ public class UserCreateDTO
     [Required]
     [MinLength(8)]
     public required string Password { get; set; }
-    public List<int> Roles {get; set; } = [];
+    public List<int> Roles { get; set; } = [];
 }
 
-public class UserSignInDTO {
+public class UserSignInDTO
+{
     [Required]
-    public required string Username {get; set;}
+    public required string Username { get; set; }
+
     [Required]
-    public required string Password {get; set;}
+    public required string Password { get; set; }
 }
