@@ -1,16 +1,16 @@
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
-using api.DTO.Users.Setttings;
+using api.DTO.SetttingsDTO;
 using api.Models;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 
 namespace api.Helpers;
 
-public class JwtTokenGenerator(IOptions<JwtSettings> jwtSettings)
+public class JwtTokenGenerator(IOptions<JwtSettingsDTO> jwtSettings)
 {
-    private readonly JwtSettings _jwtSettings = jwtSettings.Value;
+    private readonly JwtSettingsDTO _jwtSettings = jwtSettings.Value;
 
     public string GenerateToken(User user)
     {

@@ -1,7 +1,8 @@
 using System.Text;
 using api.Data;
-using api.DTO.Users.Setttings;
+using api.DTO.SetttingsDTO;
 using api.Helpers;
+using api.Mappers;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
@@ -31,16 +32,16 @@ try
     builder.Services.AddHttpClient();
     builder.Services.AddEndpointsApiExplorer();
     builder.Services.AddSwaggerGen();
-    builder.Services.Configure<JwtSettings>(builder.Configuration.GetSection("Jwt"));
+    builder.Services.Configure<JwtSettingsDTO>(builder.Configuration.GetSection("Jwt"));
 
     builder.Services.AddScoped<JwtTokenGenerator>();
-
+    builder.Services.AddAutoMapper(typeof(ReservesProfile), typeof(RoomsProfile));
     builder
         .Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
         .AddJwtBearer(opt =>
         {
             var jwtSettings =
-                builder.Configuration.GetSection("Jwt").Get<JwtSettings>()
+                builder.Configuration.GetSection("Jwt").Get<JwtSettingsDTO>()
                 ?? throw new InvalidOperationException("Jwt Section not found");
             ;
             var jwtSecret =

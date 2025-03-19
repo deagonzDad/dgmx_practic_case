@@ -1,7 +1,4 @@
 using api.Helpers;
-
-using Microsoft.AspNetCore.Authentication.JwtBearer;
-using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 
@@ -9,10 +6,10 @@ namespace api.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    [Authorize]
-    public class Hotels(ILogger<Hotels> logger) : ControllerBase
+    public class ReservationController(ILogger<ReservationController> logger) : ControllerBase
     {
-        private readonly ILogger<Hotels> _logger = logger;
+        private readonly ILogger<ReservationController> _logger = logger;
+
         [HttpGet]
         public IActionResult Test()
         {
@@ -23,7 +20,7 @@ namespace api.Controllers
                 {
                     message = "hola",
                     value = 42,
-                    isActive = true
+                    isActive = true,
                 };
                 return Ok(testObject);
             }

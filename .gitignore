@@ -1,7 +1,7 @@
 # Compiled output
-/backend/api/bin
-/backend/api/obj
-/backend/api/publish
+/backend/*/bin
+/backend/*/obj
+/backend/*/publish
 # Visual Studio files
 .vs/
 *.csproj.user

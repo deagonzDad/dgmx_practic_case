@@ -1,6 +1,6 @@
-namespace api.DTO.Users.Setttings;
+namespace api.DTO.SetttingsDTO;
 
-public class JwtSettings
+public class JwtSettingsDTO
 {
     public required string Key { get; set; }
     public required string Issuer { get; set; }

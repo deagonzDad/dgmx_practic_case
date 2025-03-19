@@ -1,6 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 
-namespace api.DTO.Users;
+namespace api.DTO.UsersDTO;
 
 public class UserCreateDTO
 {
@@ -24,4 +24,11 @@ public class UserSignInDTO
 
     [Required]
     public required string Password { get; set; }
+}
+
+public class UserCreatedDTO
+{
+    public int UserId { get; set; }
+    public required string Username { get; set; }
+    public required string Email { get; set; }
 }

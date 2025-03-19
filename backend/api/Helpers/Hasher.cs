@@ -1,14 +1,15 @@
 namespace api.Helpers;
 
 using System.Security.Cryptography;
+using api.Helpers.Instances;
 
-public class PasswordHasher
+public class PasswordHasher : IHasher
 {
     private const int SaltSize = 16;
     private const int KeySize = 32;
     private const int Iterations = 1000;
 
-    public static string HashedPassword(string password)
+    public string HashPassword(string password)
     {
         using var rng = RandomNumberGenerator.Create();
         byte[] salt = new byte[SaltSize];
@@ -26,7 +27,7 @@ public class PasswordHasher
         return Convert.ToBase64String(hashBytes);
     }
 
-    public static bool VerifyPassword(string password, string hashedPassword)
+    public bool VerifyPassword(string password, string hashedPassword)
     {
         byte[] hashBytes = Convert.FromBase64String(hashedPassword);
         byte[] salt = new byte[SaltSize];
