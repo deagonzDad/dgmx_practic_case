@@ -5,5 +5,5 @@ namespace api.Repository.Interfaces;
 
 public interface IUserRepository
 {
-    Task<User?> GetUSerByUsernameAsync(string username);
+    Task<User> GetUserByUsernameAsync(string username);
 }

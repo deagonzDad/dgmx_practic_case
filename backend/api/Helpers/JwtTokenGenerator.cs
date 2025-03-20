@@ -2,17 +2,18 @@ using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
 using api.DTO.SetttingsDTO;
+using api.Helpers.Instances;
 using api.Models;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 
 namespace api.Helpers;
 
-public class JwtTokenGenerator(IOptions<JwtSettingsDTO> jwtSettings)
+public class JwtTokenGenerator(IOptions<JwtSettingsDTO> jwtSettings) : IJwtTokenGenerator
 {
     private readonly JwtSettingsDTO _jwtSettings = jwtSettings.Value;
 
-    public string GenerateToken(User user)
+    public JWTTokenResDTO GenerateToken(User user)
     {
         List<string> listRoles = [.. user.Roles.Select(r => r.Name)];
         JwtSecurityTokenHandler tokenHandler = new();
@@ -38,6 +39,12 @@ public class JwtTokenGenerator(IOptions<JwtSettingsDTO> jwtSettings)
             Audience = _jwtSettings.Audience,
         };
         SecurityToken token = tokenHandler.CreateToken(tokenDescriptor);
-        return tokenHandler.WriteToken(token);
+        return new JWTTokenResDTO
+        {
+            Token = tokenHandler.WriteToken(token),
+            ExpireIn = (_jwtSettings.ExpirationMinutes * 60).ToString(),
+            RefreshToken = "",
+            RefreshExpireIn = "",
+        };
     }
 }

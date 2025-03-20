@@ -2,6 +2,7 @@ using System.Text;
 using api.Data;
 using api.DTO.SetttingsDTO;
 using api.Helpers;
+using api.Infrastructure;
 using api.Mappers;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
@@ -9,25 +10,26 @@ using Microsoft.IdentityModel.Tokens;
 using Serilog;
 using Serilog.Events;
 
-Log.Logger = new LoggerConfiguration()
-    .MinimumLevel.Debug()
-    .WriteTo.Console()
-    .WriteTo.Logger(lc =>
-        lc.Filter.ByIncludingOnly(le =>
-                le.Level >= LogEventLevel.Warning || le.Properties.ContainsKey("CDebug")
-            )
-            .WriteTo.File(
-                "Logs/log-.txt",
-                outputTemplate: "{Timestamp:yyyy-MM-dd HH:mm:ss.fff} [{Level:u3}] {Message:lj}{NewLine}{Exception}"
-            )
-    )
-    .CreateLogger();
+// Log.Logger = new LoggerConfiguration()
+//     .MinimumLevel.Debug()
+//     .WriteTo.Console()
+//     .WriteTo.Logger(lc =>
+//         lc.Filter.ByIncludingOnly(le =>
+//                 le.Level >= LogEventLevel.Warning || le.Properties.ContainsKey("CDebug")
+//             )
+//             .WriteTo.File(
+//                 "Logs/log-dev-.txt",
+//                 outputTemplate: "{Timestamp:yyyy-MM-dd HH:mm:ss.fff} [{Level:u3}] {Message:lj}{NewLine}{Exception}"
+//             )
+//     )
+//     .CreateLogger();
 try
 {
     var builder = WebApplication.CreateBuilder(args);
     // Add services to the container.
-    builder.Host.UseSerilog();
-
+    builder.Host.UseSerilog(
+        (context, loggedConf) => loggedConf.ReadFrom.Configuration(context.Configuration)
+    );
     builder.Services.AddControllers();
     builder.Services.AddHttpClient();
     builder.Services.AddEndpointsApiExplorer();
@@ -87,6 +89,7 @@ try
     app.UseHttpsRedirection();
 
     app.MapControllers();
+    app.UseMiddleware<RequestLogContextMiddleware>();
     //add support to logging request with Serilog
     app.UseSerilogRequestLogging();
     app.Run();

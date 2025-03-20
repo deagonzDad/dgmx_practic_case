@@ -1,8 +1,12 @@
 using api.Data;
+using api.DTO.ResponseDTO;
+using api.DTO.SetttingsDTO;
 using api.DTO.UsersDTO;
 using api.Exceptions;
 using api.Helpers;
+using api.Helpers.Instances;
 using api.Models;
+using api.Services.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -12,14 +16,18 @@ namespace api.Controllers
     [Route("api/[controller]")]
     [ApiController]
     public class AuthController(
-        IConfiguration config,
-        AppDbContext dbContext,
-        JwtTokenGenerator jwtTokenGenerator
+        // IConfiguration config,
+        // AppDbContext dbContext,
+        // JwtTokenGenerator jwtTokenGenerator,
+        IHasher hasher,
+        IAuthService authService
     ) : ControllerBase
     {
-        private readonly IConfiguration _config = config;
-        private readonly AppDbContext _dbContext = dbContext;
-        private readonly JwtTokenGenerator _jwtTokenGenerator = jwtTokenGenerator;
+        // private readonly IConfiguration _config = config;
+        // private readonly AppDbContext _dbContext = dbContext;
+        // private readonly JwtTokenGenerator _jwtTokenGenerator = jwtTokenGenerator;
+        private readonly IAuthService _authService = authService;
+        private readonly IHasher _hasher = hasher;
 
         [AllowAnonymous]
         [HttpPost]
@@ -73,7 +81,9 @@ namespace api.Controllers
         [AllowAnonymous]
         [HttpPost]
         [Route("login")]
-        public async Task<ActionResult<string>> SignIn([FromBody] UserSignInDTO signIn)
+        public async Task<ActionResult<ResponseDTO<JWTTokenResDTO?, ErrorDTO?>>> Login(
+            [FromBody] UserSignInDTO login
+        )
         {
             // using var transaction = await _dbContext.Database.BeginTransactionAsync();
             try
@@ -85,18 +95,10 @@ namespace api.Controllers
                         new { res = ModelState }
                     );
                 }
-                User user =
-                    await _dbContext
-                        .Users.Where(r => r.Username == signIn.Username)
-                        .Include(a => a.Roles)
-                        .FirstOrDefaultAsync() ?? throw new UserNotFoundException();
-
-                if (!PasswordHasher.VerifyPassword(signIn.Password, user.Password))
-                {
-                    return Unauthorized("Invalid Credentials");
-                }
-                string token = _jwtTokenGenerator.GenerateToken(user);
-                return Ok(new { Token = token });
+                ResponseDTO<JWTTokenResDTO?, ErrorDTO?> response = await _authService.LoginAsync(
+                    login
+                );
+                return Ok(response);
             }
             catch (Exception res)
             {
