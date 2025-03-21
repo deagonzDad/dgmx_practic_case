@@ -85,7 +85,6 @@ namespace api.Controllers
             [FromBody] UserSignInDTO login
         )
         {
-            // using var transaction = await _dbContext.Database.BeginTransactionAsync();
             try
             {
                 if (!ModelState.IsValid)

@@ -18,9 +18,10 @@ public class Payment
     [Required]
     public DateTime PaymentDate { get; set; }
 
-    [Required]
-    public PaymentMethod PaymentMethod { get; set; }
     public Reservation? Reservation { get; set; }
+
+    [Required]
+    public virtual PaymentMethod PaymentMethod { get; set; }
 }
 
 public enum PaymentMethod

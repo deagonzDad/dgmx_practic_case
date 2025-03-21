@@ -19,4 +19,10 @@ public class UserRepository(AppDbContext context) : IUserRepository
                 .FirstOrDefaultAsync() ?? throw new UserNotFoundException();
         return user;
     }
+
+    public async Task CreateUserAsync(User user)
+    {
+        await _context.Users.AddAsync(user);
+        await _context.SaveChangesAsync();
+    }
 }

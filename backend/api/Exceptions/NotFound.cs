@@ -14,26 +14,38 @@ public class UserNotFoundException : BaseApiException
         : base(message, NotFoundCode) { }
 }
 
-public class RoomNotFound : BaseApiException
+public class RoomNotFoundException : BaseApiException
 {
     private const string DefaultMessage = "Room not found";
     private const int NotFoundCode = 404;
 
-    public RoomNotFound()
+    public RoomNotFoundException()
         : base(DefaultMessage, NotFoundCode) { }
 
-    public RoomNotFound(string message)
+    public RoomNotFoundException(string message)
         : base(message, NotFoundCode) { }
 }
 
-public class ReservationNotFound : BaseApiException
+public class ReservationNotFoundException : BaseApiException
 {
     private const string DefaultMessage = "Reserve not found";
     private const int NotFoundCode = 404;
 
-    public ReservationNotFound()
+    public ReservationNotFoundException()
         : base(DefaultMessage, NotFoundCode) { }
 
-    public ReservationNotFound(string message)
+    public ReservationNotFoundException(string message)
+        : base(message, NotFoundCode) { }
+}
+
+public class RoleNotFoundException : BaseApiException
+{
+    private const string DefaultMessage = "Role not found";
+    private const int NotFoundCode = 404;
+
+    public RoleNotFoundException()
+        : base(DefaultMessage, NotFoundCode) { }
+
+    public RoleNotFoundException(string message)
         : base(message, NotFoundCode) { }
 }
