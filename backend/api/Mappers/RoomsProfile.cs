@@ -1,5 +1,6 @@
 using System;
+using AutoMapper;
 
 namespace api.Mappers;
 
-public class RoomsProfile { }
+public class RoomsProfile : Profile { }

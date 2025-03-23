@@ -1,4 +1,5 @@
 using System.ComponentModel.DataAnnotations;
+using api.DTO.Interfaces;
 
 namespace api.DTO.UsersDTO;
 
@@ -26,7 +27,7 @@ public class UserSignInDTO
     public required string Password { get; set; }
 }
 
-public class UserCreatedDTO
+public class UserCreatedDTO : IResponseData
 {
     public int UserId { get; set; }
     public required string Username { get; set; }

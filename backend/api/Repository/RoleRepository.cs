@@ -17,21 +17,35 @@ public class RoleRepository(AppDbContext context) : IRoleRepository
 
     public async Task<(bool, List<Role>)> ValidateRolesExistAsync(List<int> rolesIds)
     {
-        int userId = 1;
         List<Role> existingRoleIds = await _context
             .Roles.Where(r => rolesIds.Contains(r.Id))
             .ToListAsync();
-        //create validator if the user is new don't get all the roles assigned to the user
-        //if the user is old then get the user with the roles to validate if the roles are repeated or not
-        //TODO: Investigate if I can do a bulk create and only ignore the relationship if the role already exists
-        // User roleAssignedToUser = await _context.Users.Include(u=>u.Roles).FirstOrDefaultAsync(u=>u.Id == userId)
         bool allRolesExist = existingRoleIds.Count == rolesIds.Count;
-        List<Role> filteredRoles = await existingRoleIds.Where(r => !roleIds)
         return (allRolesExist, existingRoleIds);
     }
 
-    public async Task AssignRoleToUserAsync(List<int> userIds, int roleId)
+    public async Task AssignRoleToUserAsync(User user, List<Role> roles, bool isNew)
     {
-
+        List<Role> rolesToAssign = roles;
+        if (!isNew)
+        {
+            List<Role> rolesAssignToUser = await _context
+                .UserRoles.Where(u => u.UserId == user.Id)
+                .Include(ur => ur.Role)
+                .Select(ur => ur.Role)
+                .Distinct()
+                .ToListAsync();
+            rolesToAssign = [.. roles.Where(r => !rolesAssignToUser.Contains(r))];
+        }
+        List<UserRole> relationUserRole = [];
+        foreach (Role role in rolesToAssign)
+        {
+            relationUserRole.Add(new UserRole { UserId = user.Id, RoleId = role.Id });
+        }
+        if (relationUserRole.Count != 0)
+        {
+            await _context.UserRoles.AddRangeAsync(relationUserRole);
+            await _context.SaveChangesAsync();
+        }
     }
 }

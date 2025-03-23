@@ -1,6 +1,4 @@
-using System;
 using api.DTO.UsersDTO;
-using api.Helpers.Instances;
 using api.Models;
 using AutoMapper;
 
@@ -8,11 +6,8 @@ namespace api.Mappers;
 
 public class UsersProfile : Profile
 {
-    private readonly IHasher _hasher;
-
-    public UsersProfile(IHasher hasher)
+    public UsersProfile()
     {
-        _hasher = hasher;
         ConfigureUserModelToUserDTOMapping();
         ConfigureUserDTOToUserModelMapping();
     }
@@ -25,10 +20,6 @@ public class UsersProfile : Profile
 
     private void ConfigureUserDTOToUserModelMapping()
     {
-        CreateMap<UserCreateDTO, User>()
-            .ForMember(
-                dest => dest.Password,
-                opt => opt.MapFrom(src => _hasher.HashPassword(src.Password))
-            );
+        CreateMap<UserCreateDTO, User>();
     }
 }

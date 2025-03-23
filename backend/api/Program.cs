@@ -3,12 +3,19 @@ using api.Data;
 using api.DTO.SetttingsDTO;
 using api.Helpers;
 using api.Infrastructure;
+using api.Infrastructure.DependecyInjection;
 using api.Mappers;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Serilog;
 using Serilog.Events;
+
+Log.Logger = new LoggerConfiguration()
+    .MinimumLevel.Override("Microsft", LogEventLevel.Information)
+    .Enrich.FromLogContext()
+    .WriteTo.Console()
+    .CreateBootstrapLogger();
 
 // Log.Logger = new LoggerConfiguration()
 //     .MinimumLevel.Debug()
@@ -25,59 +32,25 @@ using Serilog.Events;
 //     .CreateLogger();
 try
 {
+    Log.Information("Starting WebApp");
     var builder = WebApplication.CreateBuilder(args);
     // Add services to the container.
-    builder.Host.UseSerilog(
-        (context, loggedConf) => loggedConf.ReadFrom.Configuration(context.Configuration)
-    );
+    builder.Host.ConfigureLog();
     builder.Services.AddControllers();
+
+    builder.Services.ConfigureRepositories();
+    builder.Services.ConfigureServices();
+    builder.Services.ConfigureHelpers();
+    builder.Services.ConfigureJWTToken(builder.Configuration);
+    builder.Services.ConfigureAutoMapper();
+    builder.Services.ConfigureDatabase(builder.Configuration);
     builder.Services.AddHttpClient();
     builder.Services.AddEndpointsApiExplorer();
     builder.Services.AddSwaggerGen();
-    builder.Services.Configure<JwtSettingsDTO>(builder.Configuration.GetSection("Jwt"));
 
-    builder.Services.AddScoped<JwtTokenGenerator>();
-    builder.Services.AddAutoMapper(typeof(ReservesProfile), typeof(RoomsProfile));
-    builder
-        .Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
-        .AddJwtBearer(opt =>
-        {
-            var jwtSettings =
-                builder.Configuration.GetSection("Jwt").Get<JwtSettingsDTO>()
-                ?? throw new InvalidOperationException("Jwt Section not found");
-            ;
-            var jwtSecret =
-                jwtSettings.Key
-                ?? throw new InvalidOperationException("Jwt:Key configuration is missing");
-            var EncodignjwtSecret = Encoding.UTF8.GetBytes(jwtSecret);
-            opt.SaveToken = true;
-
-            opt.TokenValidationParameters = new TokenValidationParameters
-            {
-                ValidateIssuer = true,
-                ValidateAudience = true,
-                ValidateLifetime = true,
-                ValidateIssuerSigningKey = true,
-                ValidIssuer = jwtSettings.Issuer,
-                ValidAudience = jwtSettings.Audience,
-                IssuerSigningKey = new SymmetricSecurityKey(EncodignjwtSecret),
-            };
-        });
-
-    builder
-        .Services.AddAuthorizationBuilder()
-        .AddPolicy("AdminOnly", policy => policy.RequireRole("Admin"))
-        .AddPolicy("UserOrAdmin", policy => policy.RequireRole("User", "Admin"));
-
-    builder.Services.AddDbContext<AppDbContext>(opts =>
-        opts.UseSqlite(builder.Configuration.GetConnectionString("SqliteConnection"))
-    );
     var app = builder.Build();
 
-    using var scope = app.Services.CreateScope();
-    var dbContext = scope.ServiceProvider.GetRequiredService<AppDbContext>();
-    dbContext.Database.Migrate();
-    dbContext.SeedBasicUsers(dbContext);
+    app.Services.ConfigureDatabaseScope();
 
     // Configure the HTTP request pipeline.
     if (app.Environment.IsDevelopment())

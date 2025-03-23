@@ -1,3 +1,4 @@
+using api.DTO.Interfaces;
 using api.DTO.ResponseDTO;
 using api.DTO.SetttingsDTO;
 using api.DTO.UsersDTO;

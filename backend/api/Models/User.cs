@@ -1,9 +1,12 @@
 using System;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using Microsoft.EntityFrameworkCore;
 
 namespace api.Models;
 
+[Index(nameof(Email), IsUnique = true)]
+[Index(nameof(Username), IsUnique = true)]
 public class User
 {
     [Key]
@@ -27,6 +30,10 @@ public class User
 
     [MaxLength(100)]
     public string LastName { get; set; } = "";
-    public ICollection<Reservation> Reservations { get; set; } = [];
-    public ICollection<Role> Roles { get; set; } = [];
+    public virtual ICollection<Reservation> Reservations { get; set; } = [];
+
+    // public virtual ICollection<UserReservation> UserReservations { get; set; } = [];
+
+    public virtual ICollection<Role> Roles { get; set; } = [];
+    public virtual ICollection<UserRole> UserRoles { get; set; } = [];
 }

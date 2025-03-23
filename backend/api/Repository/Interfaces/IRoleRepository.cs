@@ -7,5 +7,5 @@ public interface IRoleRepository
 {
     Task CreateRolAsync();
     Task<(bool, List<Role>)> ValidateRolesExistAsync(List<int> rolesIds);
-    Task AssignRoleToUserAsync(int userId, List<Role> roleId);
+    Task AssignRoleToUserAsync(User user, List<Role> roles, bool isNew);
 }
