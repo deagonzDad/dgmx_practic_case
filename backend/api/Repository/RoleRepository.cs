@@ -24,12 +24,23 @@ public class RoleRepository(AppDbContext context) : IRoleRepository
         return (allRolesExist, existingRoleIds);
     }
 
-    public async Task<List<Role>> GetRolesByNameAsync(List<string> roleNames)
+    public async Task<List<Role>> GetRolesByNameAsync(ICollection<string> roleNames)
     {
         List<Role> rolesExisted = await _context
             .Roles.Where(r => roleNames.Contains(r.Name))
             .ToListAsync();
         return rolesExisted;
+    }
+
+    private async Task<List<Role>> GetRolesAssignToUserAsync(User user)
+    {
+        List<Role> rolesAssignToUser = await _context
+            .UserRoles.Where(u => u.UserId == user.Id)
+            .Include(ur => ur.Role)
+            .Select(ur => ur.Role)
+            .Distinct()
+            .ToListAsync();
+        return rolesAssignToUser;
     }
 
     public async Task AssignRoleToUserAsync(User user, List<Role> roles, bool isNew)
@@ -38,12 +49,7 @@ public class RoleRepository(AppDbContext context) : IRoleRepository
 
         if (!isNew)
         {
-            List<Role> rolesAssignToUser = await _context
-                .UserRoles.Where(u => u.UserId == user.Id)
-                .Include(ur => ur.Role)
-                .Select(ur => ur.Role)
-                .Distinct()
-                .ToListAsync();
+            List<Role> rolesAssignToUser = await GetRolesAssignToUserAsync(user);
             rolesToAssign = [.. roles.Where(r => !rolesAssignToUser.Contains(r))];
         }
         List<UserRole> relationUserRole = [];
