@@ -1,13 +1,5 @@
-using System.Text;
-using api.Data;
-using api.DTO.SetttingsDTO;
-using api.Helpers;
 using api.Infrastructure;
 using api.Infrastructure.DependecyInjection;
-using api.Mappers;
-using Microsoft.AspNetCore.Authentication.JwtBearer;
-using Microsoft.EntityFrameworkCore;
-using Microsoft.IdentityModel.Tokens;
 using Serilog;
 using Serilog.Events;
 
@@ -17,19 +9,6 @@ Log.Logger = new LoggerConfiguration()
     .WriteTo.Console()
     .CreateBootstrapLogger();
 
-// Log.Logger = new LoggerConfiguration()
-//     .MinimumLevel.Debug()
-//     .WriteTo.Console()
-//     .WriteTo.Logger(lc =>
-//         lc.Filter.ByIncludingOnly(le =>
-//                 le.Level >= LogEventLevel.Warning || le.Properties.ContainsKey("CDebug")
-//             )
-//             .WriteTo.File(
-//                 "Logs/log-dev-.txt",
-//                 outputTemplate: "{Timestamp:yyyy-MM-dd HH:mm:ss.fff} [{Level:u3}] {Message:lj}{NewLine}{Exception}"
-//             )
-//     )
-//     .CreateLogger();
 try
 {
     Log.Information("Starting WebApp");
