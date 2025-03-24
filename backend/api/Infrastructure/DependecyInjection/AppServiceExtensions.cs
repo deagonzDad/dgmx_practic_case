@@ -1,6 +1,4 @@
-using System;
-using api.Data;
-using Microsoft.EntityFrameworkCore;
+using api.Infrastructure.Data;
 
 namespace api.Infrastructure.DependecyInjection;
 
@@ -9,8 +7,7 @@ public static class AppServiceExtensions
     public static async void ConfigureDatabaseScope(this IServiceProvider service)
     {
         using var scope = service.CreateAsyncScope();
-        var dbContext = scope.ServiceProvider.GetRequiredService<AppDbContext>();
-        await dbContext.Database.MigrateAsync();
-        await dbContext.SeedBasicUsers(dbContext);
+        var databaseSeeder = scope.ServiceProvider.GetRequiredService<DatabaseSeeder>();
+        await databaseSeeder.SeedBasicUsers();
     }
 }

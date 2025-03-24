@@ -13,7 +13,13 @@ namespace api.Controllers
         [HttpGet]
         public IActionResult Test()
         {
-            _logger.LoggerRequest("this is a message send by API Hotels");
+            _logger.CustomDebug("this is a message send by API Hotels");
+            _logger.LogWarning("Errorsote");
+            _logger.LogError("Error created test");
+            _logger.LogWarning("Test with CDebug", new { CDebug = true });
+            _logger.LogDebug("Hi without cddebug");
+            _logger.LogDebug("Hi with CDdebug", new { CDebug = true });
+
             try
             {
                 var testObject = new

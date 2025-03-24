@@ -3,6 +3,7 @@ using api.Data;
 using api.DTO.SetttingsDTO;
 using api.Helpers;
 using api.Helpers.Instances;
+using api.Infrastructure.Data;
 using api.Mappers;
 using api.Repository;
 using api.Repository.Interfaces;
@@ -30,6 +31,7 @@ public static class ServiceExtensions
 
     public static void ConfigureHelpers(this IServiceCollection services)
     {
+        services.AddScoped<DatabaseSeeder>();
         services.AddScoped<IHasher, PasswordHasher>();
         services.AddScoped<IJwtTokenGenerator, JwtTokenGenerator>();
     }

@@ -14,7 +14,7 @@ namespace api.Controllers
         [HttpGet]
         public IActionResult Test()
         {
-            _logger.LoggerRequest("this is a message send by API Hotels");
+            _logger.CustomDebug("this is a message send by API Hotels");
             try
             {
                 var testObject = new

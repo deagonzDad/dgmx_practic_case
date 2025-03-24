@@ -6,6 +6,8 @@ namespace api.Repository.Interfaces;
 public interface IRoleRepository
 {
     Task CreateRolAsync();
-    Task<(bool, List<Role>)> ValidateRolesExistAsync(List<int> rolesIds);
+    Task<(bool, List<Role>)> ValidateRolesExistByIdAsync(List<int> rolesIds);
     Task AssignRoleToUserAsync(User user, List<Role> roles, bool isNew);
+    Task<List<Role>> GetRolesByNameAsync(List<string> roleNames);
+    Task CreateBulkRolesAsync(List<Role> listRoles);
 }

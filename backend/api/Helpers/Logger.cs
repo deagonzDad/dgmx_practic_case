@@ -5,7 +5,7 @@ namespace api.Helpers;
 
 public static class Logger
 {
-    public static void LoggerRequest(this ILogger logger, string message)
+    public static void CustomDebug(this ILogger logger, string message)
     {
         Log.Logger.ForContext("CDebug", true).Debug(message);
     }

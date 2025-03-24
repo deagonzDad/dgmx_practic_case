@@ -37,13 +37,14 @@ try
     // Add services to the container.
     builder.Host.ConfigureLog();
     builder.Services.AddControllers();
-
+    //add custom extensions
     builder.Services.ConfigureRepositories();
     builder.Services.ConfigureServices();
     builder.Services.ConfigureHelpers();
     builder.Services.ConfigureJWTToken(builder.Configuration);
     builder.Services.ConfigureAutoMapper();
     builder.Services.ConfigureDatabase(builder.Configuration);
+
     builder.Services.AddHttpClient();
     builder.Services.AddEndpointsApiExplorer();
     builder.Services.AddSwaggerGen();
@@ -67,11 +68,17 @@ try
     app.UseSerilogRequestLogging();
     app.Run();
 }
+catch (HostAbortedException)
+{
+    Log.Information("Host terminated expectedly by EF Core CLI");
+}
 catch (Exception ex)
 {
     Log.Fatal(ex, "Host terminated unexpectedly");
+    throw;
 }
 finally
 {
+    Log.Information("shutdown complete");
     Log.CloseAndFlush();
 }

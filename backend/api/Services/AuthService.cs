@@ -87,7 +87,7 @@ public class AuthService(
         {
             userDTO.Password = _hasher.HashPassword(userDTO.Password);
             User user = _mapper.Map<User>(userDTO);
-            (bool roleExist, List<Role> roles) = await _roleRepository.ValidateRolesExistAsync(
+            (bool roleExist, List<Role> roles) = await _roleRepository.ValidateRolesExistByIdAsync(
                 userDTO.Roles
             );
             if (!roleExist)
