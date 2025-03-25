@@ -20,6 +20,9 @@ public class UsersProfile : Profile
 
     private void ConfigureUserDTOToUserModelMapping()
     {
-        CreateMap<UserCreateDTO, User>();
+        CreateMap<UserCreateDTO, User>()
+            .ForMember(dest => dest.Reservations, opt => opt.Ignore())
+            .ForMember(dest => dest.UserRoles, opt => opt.Ignore())
+            .ForMember(dest => dest.Roles, opt => opt.Ignore());
     }
 }

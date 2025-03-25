@@ -1,5 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 using api.DTO.Interfaces;
+using api.ValidationAttributes;
 
 namespace api.DTO.UsersDTO;
 
@@ -12,8 +13,7 @@ public class UserCreateDTO
     [EmailAddress]
     public required string Email { get; set; }
 
-    [Required]
-    [MinLength(8)]
+    [CustomPasswordValidation]
     public required string Password { get; set; }
     public List<int> Roles { get; set; } = [];
 }
