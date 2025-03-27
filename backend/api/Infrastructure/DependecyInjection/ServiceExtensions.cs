@@ -9,6 +9,8 @@ using api.Repository;
 using api.Repository.Interfaces;
 using api.Services;
 using api.Services.Interfaces;
+using api.ValidationAttributes;
+using api.ValidationAttributes.Interfaces;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
@@ -34,6 +36,7 @@ public static class ServiceExtensions
         services.AddScoped<DatabaseSeeder>();
         services.AddScoped<IHasher, PasswordHasher>();
         services.AddScoped<IJwtTokenGenerator, JwtTokenGenerator>();
+        services.AddScoped<IRegexController, RegexController>();
     }
 
     public static void ConfigureAutoMapper(this IServiceCollection services)

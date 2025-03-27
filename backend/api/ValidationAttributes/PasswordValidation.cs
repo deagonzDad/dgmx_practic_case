@@ -1,37 +1,41 @@
 using System.ComponentModel.DataAnnotations;
 using System.Text.RegularExpressions;
+using api.ValidationAttributes.Interfaces;
 
 namespace api.ValidationAttributes;
 
 [AttributeUsage(AttributeTargets.Property | AttributeTargets.Field, AllowMultiple = false)]
-public sealed partial class CustomPasswordValidation : ValidationAttribute
+public sealed class CustomPasswordValidation : ValidationAttribute
 {
-    [GeneratedRegex("[A-Z]")]
-    private static partial Regex UpperCaseRegex();
-
-    [GeneratedRegex("[^a-zA-Z0-9]")]
-    private static partial Regex SpecialCharacterRegex();
-
     private const int MinimumLenght = 8;
 
     protected override ValidationResult? IsValid(object? value, ValidationContext validationContext)
     {
+        IRegexController _regexController =
+            validationContext.GetService<IRegexController>()
+            ?? throw new Exception("Service not implemented");
         if (value == null)
         {
-            return new ValidationResult("Password is required");
+            return new ValidationResult(ErrorMessage = "Password is required");
         }
         string password = value?.ToString() ?? "";
         if (password.Length < MinimumLenght)
         {
-            return new ValidationResult("Password must be at least 8 characters long");
+            return new ValidationResult(
+                ErrorMessage = "Password must be at least 8 characters long"
+            );
         }
-        if (!UpperCaseRegex().IsMatch(password))
+        if (!_regexController.UpperCaseRegex().IsMatch(password))
         {
-            return new ValidationResult("Password must contain at least one uppercase letter");
+            return new ValidationResult(
+                ErrorMessage = "Password must contain at least one uppercase letter"
+            );
         }
-        if (!SpecialCharacterRegex().IsMatch(password))
+        if (!_regexController.SpecialCharacterRegex().IsMatch(password))
         {
-            return new ValidationResult("Password must contain at least one special character.");
+            return new ValidationResult(
+                ErrorMessage = "Password must contain at least one special character."
+            );
         }
         return ValidationResult.Success;
     }
