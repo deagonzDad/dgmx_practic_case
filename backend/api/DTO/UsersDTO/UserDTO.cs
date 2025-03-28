@@ -4,34 +4,38 @@ using api.ValidationAttributes;
 
 namespace api.DTO.UsersDTO;
 
-public class UserCreateDTO
+public class BaseUserDTO : IResponseData
 {
     [Required]
-    public required string Username { get; set; }
+    public string? Username { get; set; }
 
     [Required]
     [EmailAddress]
-    public required string Email { get; set; }
+    public string? Email { get; set; }
+}
 
+public class UserCreateDTO : BaseUserDTO
+{
     [CustomPasswordValidation]
     public required string Password { get; set; }
     public List<int> Roles { get; set; } = [];
 }
 
-public class UserSignInDTO
+public class UserSignInDTO : BaseUserDTO
 {
-    [Required]
-    public required string Username { get; set; }
+    public new string? Username { get; set; }
+    public new string? Email { get; set; } = "";
 
     [Required]
-    public required string Password { get; set; }
+    [CustomPasswordValidation]
+    public string? Password { get; set; }
 }
 
-public class UserCreatedDTO : IResponseData
+public class UserCreatedDTO : BaseUserDTO
 {
     public int UserId { get; set; }
-    public required string Username { get; set; }
-    public required string Email { get; set; }
+
+    public new string? Email { get; set; }
 
     // public List<int> Roles { get; set; } = [];
     public string FirstName { get; set; } = "";

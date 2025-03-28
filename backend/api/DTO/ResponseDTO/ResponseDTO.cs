@@ -17,3 +17,12 @@ public class ResponseDTO<T, D>
     [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
     public D? Error { get; set; } = default;
 }
+
+public class DataListPaginationDTO<T> : IResponseData
+    where T : IResponseData?
+{
+    public List<T> Data { get; set; } = [];
+    public int TotalRecords { get; set; } = 0;
+    public string? Next { get; set; } = null;
+    public string? Previous { get; set; } = null;
+}

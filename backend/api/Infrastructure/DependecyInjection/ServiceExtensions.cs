@@ -23,12 +23,14 @@ public static class ServiceExtensions
     {
         services.AddScoped<IUserRepository, UserRepository>();
         services.AddScoped<IRoleRepository, RoleRepository>();
+        services.AddScoped<IRoomRepository, RoomRepository>();
         // services.AddScoped<IReservationRepository, ReservationRepository>();
     }
 
     public static void ConfigureServices(this IServiceCollection services)
     {
         services.AddScoped<IAuthService, AuthService>();
+        services.AddScoped<IRoomService, RoomService>();
     }
 
     public static void ConfigureHelpers(this IServiceCollection services)
