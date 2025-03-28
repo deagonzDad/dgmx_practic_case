@@ -17,6 +17,14 @@ public class Room
 
     [Required]
     public decimal PricePerNight { get; set; }
+
+    [Required]
+    public bool IsAvailable { get; set; } = true;
+
+    [Required]
+    public bool IsActive { get; set; } = true;
+
+    [Required]
     public virtual ICollection<Reservation> Reservations { get; set; } = [];
 }
 
