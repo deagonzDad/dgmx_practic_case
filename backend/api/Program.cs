@@ -21,6 +21,7 @@ try
     builder.Services.ConfigureServices();
     builder.Services.ConfigureHelpers();
     builder.Services.ConfigureJWTToken(builder.Configuration);
+    builder.Services.ConfigureSections(builder.Configuration);
     builder.Services.ConfigureAutoMapper();
     builder.Services.ConfigureDatabase(builder.Configuration);
 
