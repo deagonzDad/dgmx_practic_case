@@ -39,6 +39,7 @@ public static class ServiceExtensions
         services.AddScoped<IHasher, PasswordHasher>();
         services.AddScoped<IJwtTokenGenerator, JwtTokenGenerator>();
         services.AddScoped<IRegexController, RegexController>();
+        services.AddScoped<IErrorHandler, ErrorHandler>();
     }
 
     public static void ConfigureAutoMapper(this IServiceCollection services)
@@ -51,9 +52,14 @@ public static class ServiceExtensions
         });
     }
 
-    public static void ConfigureJWTToken(this IServiceCollection services, IConfiguration config)
+    public static void ConfigureSections(this IServiceCollection services, IConfiguration config)
     {
         services.Configure<JwtSettingsDTO>(config.GetSection("Jwt"));
+        services.Configure<EncryptKeysDTO>(config.GetSection("Encryption"));
+    }
+
+    public static void ConfigureJWTToken(this IServiceCollection services, IConfiguration config)
+    {
         services.AddScoped<JwtTokenGenerator>();
         services
             .AddAuthentication(JwtBearerDefaults.AuthenticationScheme)

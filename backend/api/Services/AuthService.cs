@@ -15,23 +15,38 @@ using Microsoft.EntityFrameworkCore;
 
 namespace api.Services;
 
-public class AuthService(
-    IUserRepository userRepository,
-    IRoleRepository roleRepository,
-    IHasher hasher,
-    JwtTokenGenerator jwtGenerator,
-    AppDbContext dbContext,
-    IMapper mapper,
-    ILogger<AuthService> logger
-) : IAuthService
+public class AuthService : IAuthService
 {
-    private readonly IUserRepository _userRepository = userRepository;
-    private readonly IRoleRepository _roleRepository = roleRepository;
-    private readonly IHasher _hasher = hasher;
-    private readonly JwtTokenGenerator _jwtGenerator = jwtGenerator;
-    private readonly AppDbContext _dbContext = dbContext;
-    private readonly IMapper _mapper = mapper;
-    private readonly ILogger<AuthService> _logger = logger;
+    private readonly IUserRepository _userRepository;
+    private readonly IRoleRepository _roleRepository;
+    private readonly IHasher _hasher;
+    private readonly JwtTokenGenerator _jwtGenerator;
+    private readonly AppDbContext _dbContext;
+    private readonly IMapper _mapper;
+    private readonly ILogger<AuthService> _logger;
+    private readonly IErrorHandler _errorHandler;
+
+    public AuthService(
+        IUserRepository userRepository,
+        IRoleRepository roleRepository,
+        IHasher hasher,
+        JwtTokenGenerator jwtGenerator,
+        AppDbContext dbContext,
+        IMapper mapper,
+        ILogger<AuthService> logger,
+        IErrorHandler errorHandler
+    )
+    {
+        _userRepository = userRepository;
+        _roleRepository = roleRepository;
+        _hasher = hasher;
+        _jwtGenerator = jwtGenerator;
+        _dbContext = dbContext;
+        _mapper = mapper;
+        _logger = logger;
+        _errorHandler = errorHandler;
+        _errorHandler.InitService("USER", "USER_ERROR");
+    }
 
     public async Task<ResponseDTO<JWTTokenResDTO?, ErrorDTO?>> LoginAsync(UserSignInDTO userDTO)
     {
@@ -55,22 +70,24 @@ public class AuthService(
         }
         catch (UserNotFoundException ex)
         {
-            return CreateErrorRes(
+            return _errorHandler.CreateErrorRes(
                 ex,
                 responseDTO,
                 "Invalid username or password.",
                 "User not found in the database",
-                401
+                401,
+                _logger
             );
         }
         catch (UnauthorizedActionException ex)
         {
-            return CreateErrorRes(
+            return _errorHandler.CreateErrorRes(
                 ex,
                 responseDTO,
                 "Invalid username or password.",
                 "Password does not match the username",
-                401
+                401,
+                _logger
             );
         }
     }
@@ -106,65 +123,42 @@ public class AuthService(
         catch (DbUpdateException ex)
         {
             await transaction.RollbackAsync();
-            return CreateErrorRes(
+            return _errorHandler.CreateErrorRes(
                 ex,
                 responseDTO,
                 "An error occurred while processing your request.",
                 "Database error in user creation",
-                400
+                400,
+                _logger
             );
         }
         catch (RoleNotFoundException ex)
         {
             await transaction.RollbackAsync();
-            return CreateErrorRes(
+            return _errorHandler.CreateErrorRes(
                 ex,
                 responseDTO,
                 "Role not found.",
                 "Role not found in the database",
-                400
+                400,
+                _logger
             );
         }
         catch (Exception ex)
         {
             await transaction.RollbackAsync();
-            return CreateErrorRes(
+            return _errorHandler.CreateErrorRes(
                 ex,
                 responseDTO,
                 "something went wrong in the request",
                 "An error occurred while processing your request.",
-                500
+                500,
+                _logger
             );
         }
         finally
         {
             await transaction.DisposeAsync();
         }
-    }
-
-    private ResponseDTO<TData, ErrorDTO?> CreateErrorRes<TData>(
-        Exception ex,
-        ResponseDTO<TData, ErrorDTO?> responseDTO,
-        string messageRes,
-        string logMessage,
-        int Code,
-        bool isLogMessage = true
-    )
-        where TData : IResponseData?
-    {
-        if (isLogMessage)
-        {
-            _logger.LogError(ex, "{logMessage}", logMessage);
-        }
-        responseDTO.Success = false;
-        responseDTO.Message = messageRes;
-        responseDTO.Code = Code;
-        responseDTO.Error = new ErrorDTO
-        {
-            ErrorCode = "USER",
-            ErrorDescription = messageRes,
-            ErrorDetail = "USER_ERROR",
-        };
-        return responseDTO;
     }
 }

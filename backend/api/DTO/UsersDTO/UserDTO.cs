@@ -23,12 +23,13 @@ public class UserCreateDTO : BaseUserDTO
 
 public class UserSignInDTO : BaseUserDTO
 {
-    public new string? Username { get; set; }
+    [Required]
+    public new required string Username { get; set; }
     public new string? Email { get; set; } = "";
 
-    [Required]
     [CustomPasswordValidation]
-    public string? Password { get; set; }
+    [Required]
+    public required string Password { get; set; }
 }
 
 public class UserCreatedDTO : BaseUserDTO
