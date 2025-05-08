@@ -27,6 +27,8 @@ public class DatabaseSeeder(
     public async Task SeedBasicUsers()
     {
         const string DefaultUserName = "admin";
+        const string DefaultPassword = "Admin_123";
+        const string DefaultEmail = "example@example.com";
         ImmutableList<string> roleNames = ["Admin", "User"];
         await _context.Database.MigrateAsync();
         using var transaction = await _context.Database.BeginTransactionAsync();
@@ -46,10 +48,9 @@ public class DatabaseSeeder(
                 await _roleRepository.CreateBulkRolesAsync(missingRoles);
             }
             List<Role> roles = [.. dbRoles, .. missingRoles];
-            var existedAdminUsers = await _context.UserRoles.AnyAsync(ur =>
-                ur.Role.Name == "Admin"
+            bool existedAdminUsers = await _context.Users.AnyAsync(ur =>
+                ur.Roles.Any(r => r.Name.Equals(roleNames[0]))
             );
-
             if (!existedAdminUsers)
             {
                 User? existedAdminUser = await _context.Users.FirstOrDefaultAsync(r =>
@@ -60,14 +61,17 @@ public class DatabaseSeeder(
                     User adminUser = new()
                     {
                         Username = DefaultUserName,
-                        Email = "example@example.com",
-                        Password = _passwordHasher.HashPassword(DefaultUserName),
+                        Email = DefaultEmail,
+                        Password = _passwordHasher.HashPassword(DefaultPassword),
                         Roles = roles,
                     };
                     await _userRepository.CreateUserAsync(adminUser);
                     existedAdminUser = adminUser;
                 }
-                await _roleRepository.AssignRoleToUserAsync(existedAdminUser, roles, true);
+                else
+                {
+                    await _roleRepository.AssignRoleToUserAsync(existedAdminUser, roles, true);
+                }
             }
             await transaction.CommitAsync();
             _logger.CustomDebug("successful seeded basic users");

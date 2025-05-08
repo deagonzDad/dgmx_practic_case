@@ -56,12 +56,11 @@ public class RoleRepository(AppDbContext context) : IRoleRepository
         foreach (Role role in rolesToAssign)
         {
             relationUserRole.Add(new UserRole { UserId = user.Id, RoleId = role.Id });
+            //user.UserRoles.Add(new UserRole { User = user, Role = role });
         }
-        if (relationUserRole.Count != 0)
-        {
-            await _context.UserRoles.AddRangeAsync(relationUserRole);
-            await _context.SaveChangesAsync();
-        }
+
+        await _context.UserRoles.AddRangeAsync(relationUserRole);
+        await _context.SaveChangesAsync();
     }
 
     public async Task CreateBulkRolesAsync(List<Role> listRoles)
