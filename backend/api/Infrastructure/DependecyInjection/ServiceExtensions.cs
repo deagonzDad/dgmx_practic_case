@@ -65,14 +65,10 @@ public static class ServiceExtensions
             .AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
             .AddJwtBearer(opt =>
             {
-                var jwtSettings =
+                JwtSettingsDTO jwtSettings =
                     config.GetSection("Jwt").Get<JwtSettingsDTO>()
                     ?? throw new InvalidOperationException("Jwt Section not found");
-                ;
-                var jwtSecret =
-                    jwtSettings.Key
-                    ?? throw new InvalidOperationException("Jwt:Key configuration is missing");
-                var EncodignjwtSecret = Encoding.UTF8.GetBytes(jwtSecret);
+                byte[] EncodignjwtSecret = Encoding.UTF8.GetBytes(jwtSettings.Key);
                 opt.SaveToken = true;
 
                 opt.TokenValidationParameters = new TokenValidationParameters

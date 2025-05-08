@@ -23,7 +23,7 @@ public class JwtTokenGenerator(IOptions<JwtSettingsDTO> jwtSettings) : IJwtToken
             new Claim(ClaimTypes.Name, user.Username),
             new Claim(ClaimTypes.Email, user.Email),
         ];
-        foreach (var role in listRoles)
+        foreach (string role in listRoles)
         {
             claims.Add(new Claim(ClaimTypes.Role, role));
         }
