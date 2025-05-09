@@ -1,5 +1,6 @@
 using api.Infrastructure;
 using api.Infrastructure.DependecyInjection;
+using Microsoft.OpenApi.Models;
 using Serilog;
 using Serilog.Events;
 
@@ -27,7 +28,35 @@ try
 
     builder.Services.AddHttpClient();
     builder.Services.AddEndpointsApiExplorer();
-    builder.Services.AddSwaggerGen();
+    builder.Services.AddSwaggerGen(opt =>
+    {
+        opt.SwaggerDoc("v1", new OpenApiInfo { Title = "DGX Hotels", Version = "v1" });
+        OpenApiSecurityScheme securityScheme = new()
+        {
+            Name = "JWT Authentication",
+            Description = "Enter your JWT Token here",
+            In = ParameterLocation.Header,
+            Type = SecuritySchemeType.ApiKey,
+            Scheme = "bearer",
+            BearerFormat = "JWT",
+        };
+        opt.AddSecurityDefinition("Bearer", securityScheme);
+        OpenApiSecurityRequirement securityRequirement = new()
+        {
+            {
+                new OpenApiSecurityScheme
+                {
+                    Reference = new OpenApiReference
+                    {
+                        Type = ReferenceType.SecurityScheme,
+                        Id = "Bearer",
+                    },
+                },
+                Array.Empty<string>()
+            },
+        };
+        opt.AddSecurityRequirement(securityRequirement);
+    });
 
     var app = builder.Build();
 
@@ -46,6 +75,8 @@ try
     app.UseMiddleware<RequestLogContextMiddleware>();
     //add support to logging request with Serilog
     app.UseSerilogRequestLogging();
+    app.UseAuthentication();
+    app.UseAuthorization();
     app.Run();
 }
 catch (HostAbortedException)
