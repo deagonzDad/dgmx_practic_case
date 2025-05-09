@@ -1,0 +1,68 @@
+# Compiled output
+/backend/*/bin
+/backend/*/obj
+/backend/*/publish
+# Visual Studio files
+.vs/
+*.csproj.user
+*.sln.docstates
+*.suo
+*.user
+*.userosscache
+*.vssscc
+*.tlog
+*.vspscc
+*.opendb
+# NuGet packages
+/backend/api/packages/
+/backend/api/artifacts/
+*.nupkg
+*.nuget.props
+*.nuget.targets
+
+# SQLite database file
+*.db
+*.db-journal
+
+# OS generated files
+Thumbs.db
+.DS_Store
+
+# IDE specific files
+*.idea/
+*.vscode/
+ Other files that may contain secrets or sensitive data
+appsettings.Development.json # If you have sensitive data in development settings
+*.pfx # Certificates
+
+# If you are using Jetbrains Rider
+.Rider.Solution.props
+.idea/workspace.xml
+
+# If you are using Resharper
+_ReSharper.Caches/
+
+# Node Modules (if you have a front end)
+/node_modules/
+
+# Temporary files
+*.tmp
+*.log
+*.swp
+*.bak
+*.cache
+._*
+# User secrets (for development)
+/backend/api/secrets.json
+
+# Test results
+/backend/api/TestResults/
+*.trx
+*.coverage
+*.coveragexml
+
+#Db
+MyDatabase.db*
+.fake
+
+Logs/
