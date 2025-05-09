@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Immutable;
+using api.Common;
 using api.Data;
 using api.Helpers;
 using api.Helpers.Instances;
@@ -29,7 +30,7 @@ public class DatabaseSeeder(
         const string DefaultUserName = "admin";
         const string DefaultPassword = "Admin_123";
         const string DefaultEmail = "example@example.com";
-        ImmutableList<string> roleNames = ["Admin", "User"];
+        ImmutableList<string> roleNames = [AppRoles.Admin, AppRoles.User];
         await _context.Database.MigrateAsync();
         using var transaction = await _context.Database.BeginTransactionAsync();
         try
@@ -49,7 +50,7 @@ public class DatabaseSeeder(
             }
             List<Role> roles = [.. dbRoles, .. missingRoles];
             bool existedAdminUsers = await _context.Users.AnyAsync(ur =>
-                ur.Roles.Any(r => r.Name.Equals(roleNames[0]))
+                ur.Roles.Any(r => r.Name.Equals(AppRoles.Admin))
             );
             if (!existedAdminUsers)
             {

@@ -1,4 +1,5 @@
 using System.Text;
+using api.Common;
 using api.Data;
 using api.DTO.SetttingsDTO;
 using api.Helpers;
@@ -84,8 +85,31 @@ public static class ServiceExtensions
             });
         services
             .AddAuthorizationBuilder()
-            .AddPolicy("AdminOnly", policy => policy.RequireRole("Admin"))
-            .AddPolicy("UserOrAdmin", policy => policy.RequireRole("User", "Admin"));
+            .AddPolicy(
+                "AdminOnly",
+                options =>
+                {
+                    options.RequireAuthenticatedUser();
+                    options.RequireRole(AppRoles.Admin);
+                }
+            )
+            .AddPolicy(
+                "Admin",
+                options =>
+                {
+                    options.RequireAuthenticatedUser();
+                    options.RequireRole(AppRoles.User);
+                }
+            )
+            .AddPolicy(
+                "AdminWithEmail",
+                options =>
+                {
+                    options.RequireAuthenticatedUser();
+                    options.RequireRole(AppRoles.Admin);
+                    options.RequireClaim("email_verified", "true");
+                }
+            );
     }
 
     public static void ConfigureDatabase(this IServiceCollection services, IConfiguration config)
