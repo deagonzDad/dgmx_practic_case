@@ -11,17 +11,9 @@ namespace api.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    public class AuthController(
-        // IConfiguration config,
-        // AppDbContext dbContext,
-        // JwtTokenGenerator jwtTokenGenerator,
-        IAuthService authService,
-        ILogger<AuthController> logger
-    ) : MyBaseController
+    public class AuthController(IAuthService authService, ILogger<AuthController> logger)
+        : MyBaseController
     {
-        // private readonly IConfiguration _config = config;
-        // private readonly AppDbContext _dbContext = dbContext;
-        // private readonly JwtTokenGenerator _jwtTokenGenerator = jwtTokenGenerator;
         private readonly IAuthService _authService = authService;
         private readonly ILogger<AuthController> _logger = logger;
 

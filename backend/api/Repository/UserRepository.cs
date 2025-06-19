@@ -20,6 +20,23 @@ public class UserRepository(AppDbContext context) : IUserRepository
         return user;
     }
 
+    public async Task<User> GetUserByEmailOrUsernameAsync(string emailOrUsername)
+    {
+        User user =
+            await _context
+                .Users.Where(r => r.Email == emailOrUsername || r.Username == emailOrUsername)
+                .FirstOrDefaultAsync() ?? throw new UserNotFoundException();
+        return user;
+    }
+
+    public async Task<User> GetUserByEmailAsync(string email)
+    {
+        User user =
+            await _context.Users.Where(r => r.Email == email).FirstOrDefaultAsync()
+            ?? throw new UserNotFoundException();
+        return user;
+    }
+
     public async Task CreateUserAsync(User user)
     {
         await _context.Users.AddAsync(user);

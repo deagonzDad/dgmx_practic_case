@@ -36,7 +36,7 @@ try
             Name = "JWT Authentication",
             Description = "Enter your JWT Token here",
             In = ParameterLocation.Header,
-            Type = SecuritySchemeType.ApiKey,
+            Type = SecuritySchemeType.Http,
             Scheme = "bearer",
             BearerFormat = "JWT",
         };
