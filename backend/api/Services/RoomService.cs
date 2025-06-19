@@ -62,7 +62,7 @@ public class RoomService : IRoomService
                 responseDTO,
                 "An error occurred while processing your request.",
                 "Database error in room creation",
-                400,
+                StatusCodes.Status400BadRequest,
                 _logger
             );
         }
@@ -134,16 +134,34 @@ public class RoomService : IRoomService
                 responseDTO,
                 "An error occurred while processing your request.",
                 "Database error in room creation",
-                400,
+                StatusCodes.Status400BadRequest,
                 _logger
             );
         }
     }
 
-    public Task<ResponseDTO<BaseRoomDTO?, ErrorDTO?>> DeleteRoomAsync(int Id)
+    public async Task<ResponseDTO<BaseRoomDTO?, ErrorDTO?>> DeleteRoomAsync(int roomId)
     {
-        try { }
-        catch (Exception ex) { }
+        ResponseDTO<BaseRoomDTO?, ErrorDTO?> responseDTO = new() { Success = false, Message = "" };
+        try
+        {
+            Room roomToDel = await _roomRepository.GetRoomByIdAsync(roomId);
+            await _roomRepository.LogicDeleteRoomAsync(roomToDel);
+            responseDTO.Message = "Success in the room deletion";
+            responseDTO.Success = true;
+            return responseDTO;
+        }
+        catch (RoomNotFoundException ex)
+        {
+            return _errorHandler.CreateErrorRes(
+                ex,
+                responseDTO,
+                "Room not found",
+                "Room not found in the database",
+                StatusCodes.Status404NotFound,
+                _logger
+            );
+        }
         throw new NotImplementedException();
     }
 }
