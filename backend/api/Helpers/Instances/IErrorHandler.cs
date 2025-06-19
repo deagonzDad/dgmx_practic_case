@@ -17,4 +17,14 @@ public interface IErrorHandler
         bool isLogMessage = true
     )
         where TData : IResponseData?;
+    public DataListPaginationDTO<TData, ErrorDTO?> CreateErrorListRes<TData>(
+        Exception ex,
+        DataListPaginationDTO<TData, ErrorDTO?> responseDTO,
+        string messageRes,
+        string logMessage,
+        int Code,
+        ILogger? logger,
+        bool isLogMessage = true
+    )
+        where TData : IResponseData?;
 }

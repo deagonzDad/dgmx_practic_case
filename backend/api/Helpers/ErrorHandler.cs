@@ -10,6 +10,31 @@ public class ErrorHandler : IErrorHandler
     private string DetailError { get; set; } = string.Empty;
     private string ErrorCode { get; set; } = string.Empty;
 
+    public DataListPaginationDTO<TData, ErrorDTO?> CreateErrorListRes<TData>(
+        Exception ex,
+        DataListPaginationDTO<TData, ErrorDTO?> responseDTO,
+        string messageRes,
+        string logMessage,
+        int Code,
+        ILogger? logger,
+        bool isLogMessage = true
+    )
+        where TData : IResponseData?
+    {
+        if (isLogMessage)
+        {
+            logger?.LogError(ex, "{logMessage}", logMessage);
+        }
+        responseDTO.Error = new ErrorDTO
+        {
+            ErrorCode = ErrorCode,
+            ErrorDescription = messageRes,
+            ErrorDetail = DetailError,
+            ApiErrorCode = Code,
+        };
+        return responseDTO;
+    }
+
     public ResponseDTO<TData, ErrorDTO?> CreateErrorRes<TData>(
         Exception ex,
         ResponseDTO<TData, ErrorDTO?> responseDTO,

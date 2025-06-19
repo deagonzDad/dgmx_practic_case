@@ -57,7 +57,9 @@ public class AuthService : IAuthService
         };
         try
         {
-            User user = await _userRepository.GetUserByUsernameAsync(userDTO.Username);
+            string userEmail =
+                userDTO.Email ?? userDTO.Username ?? throw new UserNotFoundException();
+            User user = await _userRepository.GetUserByEmailOrUsernameAsync(userEmail);
             if (!_hasher.VerifyPassword(userDTO.Password, user.Password))
             {
                 throw new UnauthorizedActionException();
@@ -104,15 +106,9 @@ public class AuthService : IAuthService
         {
             userDTO.Password = _hasher.HashPassword(userDTO.Password);
             User user = _mapper.Map<User>(userDTO);
-            (bool roleExist, List<Role> roles) = await _roleRepository.ValidateRolesExistByIdAsync(
-                userDTO.Roles
-            );
-            if (!roleExist)
-            {
-                throw new RoleNotFoundException();
-            }
+            List<Role> roles = await _roleRepository.GetRolesByIdAsync(userDTO.Roles);
+            user.Roles = roles;
             await _userRepository.CreateUserAsync(user);
-            await _roleRepository.AssignRoleToUserAsync(user, roles, true);
             await transaction.CommitAsync();
             responseDTO.Data = _mapper.Map<UserCreatedDTO>(user);
             responseDTO.Message = "Success in the user creation";

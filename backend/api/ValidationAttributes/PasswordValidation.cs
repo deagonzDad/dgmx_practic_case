@@ -1,5 +1,4 @@
 using System.ComponentModel.DataAnnotations;
-using System.Text.RegularExpressions;
 using api.ValidationAttributes.Interfaces;
 
 namespace api.ValidationAttributes;
@@ -18,7 +17,7 @@ public sealed class CustomPasswordValidation : ValidationAttribute
         {
             return new ValidationResult(ErrorMessage = "Password is required");
         }
-        string password = value?.ToString() ?? "";
+        string password = value.ToString() ?? "";
         if (password.Length < MinimumLenght)
         {
             return new ValidationResult(
