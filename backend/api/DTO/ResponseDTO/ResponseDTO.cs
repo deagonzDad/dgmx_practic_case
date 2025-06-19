@@ -27,7 +27,7 @@ public class DataListPaginationDTO<T, D> : BaseAPIResponse<D>
     [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
     public List<T?> Data { get; set; } = [];
 
-    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
     public int TotalRecords { get; set; } = 0;
     public string? Next { get; set; } = null;
     public string? Previous { get; set; } = null;
