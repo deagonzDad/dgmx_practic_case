@@ -77,7 +77,7 @@ public class AuthService : IAuthService
                 responseDTO,
                 "Invalid username or password.",
                 "User not found in the database",
-                401,
+                StatusCodes.Status400BadRequest,
                 _logger
             );
         }
@@ -88,7 +88,7 @@ public class AuthService : IAuthService
                 responseDTO,
                 "Invalid username or password.",
                 "Password does not match the username",
-                401,
+                StatusCodes.Status400BadRequest,
                 _logger
             );
         }
@@ -124,7 +124,7 @@ public class AuthService : IAuthService
                 responseDTO,
                 "An error occurred while processing your request.",
                 "Database error in user creation",
-                400,
+                StatusCodes.Status400BadRequest,
                 _logger
             );
         }
@@ -136,7 +136,7 @@ public class AuthService : IAuthService
                 responseDTO,
                 "Role not found.",
                 "Role not found in the database",
-                400,
+                StatusCodes.Status400BadRequest,
                 _logger
             );
         }
@@ -148,7 +148,7 @@ public class AuthService : IAuthService
                 responseDTO,
                 "something went wrong in the request",
                 "An error occurred while processing your request.",
-                500,
+                StatusCodes.Status500InternalServerError,
                 _logger
             );
         }
