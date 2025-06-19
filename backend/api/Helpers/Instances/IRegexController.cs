@@ -1,13 +1,15 @@
 using System;
 using System.Text.RegularExpressions;
 
-namespace api.ValidationAttributes.Interfaces;
-
-public interface IRegexController
+namespace api.ValidationAttributes.Interfaces
 {
-    Regex UpperCaseRegex();
+    public interface IRegexController
+    {
+        Regex UpperCaseRegex();
 
-    Regex SpecialCharacterRegex();
-    Regex FilterAscDesc();
-    Regex FilterSortBy();
+        Regex SpecialCharacterRegex();
+        Regex FilterAscDesc();
+        Regex FilterSortBy();
+        Regex FilterExcludeSymbols();
+    }
 }

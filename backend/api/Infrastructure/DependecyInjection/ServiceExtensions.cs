@@ -41,6 +41,7 @@ public static class ServiceExtensions
         services.AddScoped<IJwtTokenGenerator, JwtTokenGenerator>();
         services.AddScoped<IRegexController, RegexController>();
         services.AddScoped<IErrorHandler, ErrorHandler>();
+        services.AddScoped<IEncrypter, Encrypter>();
     }
 
     public static void ConfigureAutoMapper(this IServiceCollection services)

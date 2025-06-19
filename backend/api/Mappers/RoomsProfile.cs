@@ -11,6 +11,7 @@ public class RoomsProfile : Profile
     {
         ConfigureModelToDTOMapping();
         ConfigureDTOToModelMapping();
+        ConfigureUpdateDTOToModelMapping();
     }
 
     private void ConfigureModelToDTOMapping()
@@ -24,6 +25,13 @@ public class RoomsProfile : Profile
     private void ConfigureDTOToModelMapping()
     {
         CreateMap<CreateRoomDTO, Room>()
+            .ForMember(dest => dest.RoomNumber, opt => opt.MapFrom(src => src.Number))
+            .ForMember(dest => dest.RoomType, opt => opt.MapFrom(src => src.Type));
+    }
+
+    private void ConfigureUpdateDTOToModelMapping()
+    {
+        CreateMap<UpdateRoomDTO, Room>()
             .ForMember(dest => dest.RoomNumber, opt => opt.MapFrom(src => src.Number))
             .ForMember(dest => dest.RoomType, opt => opt.MapFrom(src => src.Type));
     }
