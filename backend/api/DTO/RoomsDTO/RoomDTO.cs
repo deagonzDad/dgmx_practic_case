@@ -29,10 +29,10 @@ public class UpdateRoomDTO : BaseRoomDTO
     [Required]
     public bool IsActive { get; set; }
 
-    // public int RoomId { get; set; }
+    // public int Id { get; set; }
 }
 
-public class CreatedRoomDTO : CreateRoomDTO
+public class CreatedRoomDTO : BaseRoomDTO
 {
     public int Id { get; set; }
     public bool IsAvailable { get; set; }
@@ -40,4 +40,10 @@ public class CreatedRoomDTO : CreateRoomDTO
 
     [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
     public ICollection<CreatedReservationDTO>? ReservationDTOs { get; set; }
+}
+
+public class RoomTypeDTO : IResponseData
+{
+    public int Id { get; set; }
+    public string Name { get; set; } = "";
 }

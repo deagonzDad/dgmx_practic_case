@@ -28,4 +28,27 @@ public class MyBaseController : ControllerBase
             return BadRequest(response);
         }
     }
+
+    public ActionResult<DataListPaginationDTO<TData, ErrorDTO?>> CreateListResponse<TData>(
+        DataListPaginationDTO<TData, ErrorDTO?> response
+    )
+        where TData : IResponseData?
+    {
+        if (response.Error == null)
+        {
+            return Ok(response);
+        }
+        else if (response.Error.ApiErrorCode == 401)
+        {
+            return Unauthorized(response);
+        }
+        else if (response.Error.ApiErrorCode == 400)
+        {
+            return BadRequest(response);
+        }
+        else
+        {
+            return BadRequest(response);
+        }
+    }
 }
