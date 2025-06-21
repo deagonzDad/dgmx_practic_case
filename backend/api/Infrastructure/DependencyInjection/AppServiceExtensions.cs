@@ -1,6 +1,6 @@
 using api.Infrastructure.Data;
 
-namespace api.Infrastructure.DependecyInjection;
+namespace api.Infrastructure.DependencyInjection;
 
 public static class AppServiceExtensions
 {

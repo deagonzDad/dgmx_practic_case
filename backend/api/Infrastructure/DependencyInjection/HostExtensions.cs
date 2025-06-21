@@ -1,6 +1,6 @@
 using Serilog;
 
-namespace api.Infrastructure.DependecyInjection;
+namespace api.Infrastructure.DependencyInjection;
 
 public static class HostExtensions
 {

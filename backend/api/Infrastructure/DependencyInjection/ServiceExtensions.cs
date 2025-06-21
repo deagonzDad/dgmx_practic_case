@@ -1,7 +1,7 @@
 using System.Text;
 using api.Common;
 using api.Data;
-using api.DTO.SetttingsDTO;
+using api.DTO.SettingsDTO;
 using api.Helpers;
 using api.Helpers.Instances;
 using api.Infrastructure.Data;
@@ -16,7 +16,7 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 
-namespace api.Infrastructure.DependecyInjection;
+namespace api.Infrastructure.DependencyInjection;
 
 public static class ServiceExtensions
 {
@@ -70,7 +70,7 @@ public static class ServiceExtensions
                 JwtSettingsDTO jwtSettings =
                     config.GetSection("Jwt").Get<JwtSettingsDTO>()
                     ?? throw new InvalidOperationException("Jwt Section not found");
-                byte[] EncodignjwtSecret = Encoding.UTF8.GetBytes(jwtSettings.Key);
+                byte[] EncodingJwtSecret = Encoding.UTF8.GetBytes(jwtSettings.Key);
                 opt.SaveToken = true;
 
                 opt.TokenValidationParameters = new TokenValidationParameters
@@ -81,7 +81,7 @@ public static class ServiceExtensions
                     ValidateIssuerSigningKey = true,
                     ValidIssuer = jwtSettings.Issuer,
                     ValidAudience = jwtSettings.Audience,
-                    IssuerSigningKey = new SymmetricSecurityKey(EncodignjwtSecret),
+                    IssuerSigningKey = new SymmetricSecurityKey(EncodingJwtSecret),
                 };
             });
         services
