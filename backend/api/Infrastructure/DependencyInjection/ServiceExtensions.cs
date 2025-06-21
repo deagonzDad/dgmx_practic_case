@@ -11,7 +11,6 @@ using api.Repository.Interfaces;
 using api.Services;
 using api.Services.Interfaces;
 using api.ValidationAttributes;
-using api.ValidationAttributes.Interfaces;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;

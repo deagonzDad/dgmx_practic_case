@@ -1,5 +1,5 @@
 using System.ComponentModel.DataAnnotations;
-using api.ValidationAttributes.Interfaces;
+using api.Helpers.Instances;
 
 namespace api.ValidationAttributes;
 

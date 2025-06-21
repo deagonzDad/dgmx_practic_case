@@ -1,5 +1,5 @@
 using System.Text.RegularExpressions;
-using api.ValidationAttributes.Interfaces;
+using api.Helpers.Instances;
 
 namespace api.ValidationAttributes;
 
