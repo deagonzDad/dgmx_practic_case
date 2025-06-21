@@ -1,6 +1,5 @@
 using api.Common;
 using api.Data;
-using api.Exceptions;
 using api.Models;
 using api.Repository.Interfaces;
 using Microsoft.EntityFrameworkCore;

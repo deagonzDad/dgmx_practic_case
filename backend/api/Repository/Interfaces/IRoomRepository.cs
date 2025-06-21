@@ -1,6 +1,4 @@
-using System;
 using api.DTO.ResponseDTO;
-using api.DTO.RoomsDTO;
 using api.Models;
 
 namespace api.Repository.Interfaces;

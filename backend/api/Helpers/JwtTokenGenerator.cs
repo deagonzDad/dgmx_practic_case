@@ -1,7 +1,7 @@
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
-using api.DTO.SetttingsDTO;
+using api.DTO.SettingsDTO;
 using api.Helpers.Instances;
 using api.Models;
 using Microsoft.Extensions.Options;

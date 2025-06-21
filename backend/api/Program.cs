@@ -1,11 +1,11 @@
 using api.Infrastructure;
-using api.Infrastructure.DependecyInjection;
+using api.Infrastructure.DependencyInjection;
 using Microsoft.OpenApi.Models;
 using Serilog;
 using Serilog.Events;
 
 Log.Logger = new LoggerConfiguration()
-    .MinimumLevel.Override("Microsft", LogEventLevel.Information)
+    .MinimumLevel.Override("Microsoft", LogEventLevel.Information)
     .Enrich.FromLogContext()
     .WriteTo.Console()
     .CreateBootstrapLogger();

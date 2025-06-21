@@ -1,7 +1,6 @@
-using System;
 using System.Text.RegularExpressions;
 
-namespace api.ValidationAttributes.Interfaces
+namespace api.Helpers.Instances
 {
     public interface IRegexController
     {

@@ -1,5 +1,3 @@
-using System;
-
 namespace api.Helpers.Instances;
 
 public interface IHasher

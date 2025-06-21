@@ -1,4 +1,3 @@
-using System;
 using api.DTO.Interfaces;
 
 namespace api.DTO.ReservationsDTO;

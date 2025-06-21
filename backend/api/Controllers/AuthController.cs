@@ -1,6 +1,5 @@
-using System.Threading.Tasks;
 using api.DTO.ResponseDTO;
-using api.DTO.SetttingsDTO;
+using api.DTO.SettingsDTO;
 using api.DTO.UsersDTO;
 using api.Helpers;
 using api.Services.Interfaces;
@@ -24,7 +23,6 @@ namespace api.Controllers
             [FromBody] UserCreateDTO userDTO
         )
         {
-            //this code is incomplete for the result
             try
             {
                 if (!ModelState.IsValid)

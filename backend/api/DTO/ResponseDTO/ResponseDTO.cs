@@ -1,6 +1,7 @@
 using System;
 using System.Text.Json.Serialization;
 using api.DTO.Interfaces;
+using Microsoft.AspNetCore.Mvc.ModelBinding;
 
 namespace api.DTO.ResponseDTO;
 
@@ -36,7 +37,9 @@ public class DataListPaginationDTO<T, D> : BaseAPIResponse<D>
 public class FilterParamsDTO
 {
     public int Limit { get; set; } = 10;
-    public int SortOrder { get; set; } = 0;
+    public int SortOrder { get; set; } = 1;
+
+    [BindNever]
     public string? Cursor { get; set; } = null;
     public string? SortBy { get; set; } = null;
     public string? Filter { get; set; } = null;

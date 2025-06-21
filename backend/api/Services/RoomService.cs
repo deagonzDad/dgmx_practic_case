@@ -106,6 +106,17 @@ public class RoomService : IRoomService
                 _logger
             );
         }
+        catch (Exception ex)
+        {
+            return _errorHandler.CreateErrorListRes(
+                ex,
+                responseDTO,
+                "Something went wrong",
+                "Something went wrong doing the request to the database",
+                StatusCodes.Status500InternalServerError,
+                _logger
+            );
+        }
     }
 
     public async Task<ResponseDTO<CreatedRoomDTO?, ErrorDTO?>> UpdateRoomAsync(

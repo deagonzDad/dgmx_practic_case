@@ -6,7 +6,6 @@ using api.Helpers.Instances;
 using api.Models;
 using api.Services.Interfaces;
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Mvc;
 
 namespace api.Controllers
@@ -83,13 +82,12 @@ namespace api.Controllers
 
         [HttpGet]
         public async Task<ActionResult<DataListPaginationDTO<CreatedRoomDTO?, ErrorDTO?>>> GetRooms(
-            [FromQuery(Name = "q")] string? encryptedFilter
+            [FromQuery] FilterParamsDTO encryptedFilter,
+            [FromQuery(Name = "token")] string? token
         )
         {
             try
             {
-                string? decryptedData = _encrypter.DecryptString(encryptedFilter);
-                // IRegexController
                 if (!ModelState.IsValid)
                 {
                     return StatusCode(
@@ -97,12 +95,15 @@ namespace api.Controllers
                         new { res = ModelState }
                     );
                 }
-                FilterParamsDTO filterParams =
-                    JsonSerializer.Deserialize<FilterParamsDTO>(decryptedData) ?? new() { };
-
+                encryptedFilter.Cursor = _encrypter.DecryptString(token);
                 DataListPaginationDTO<CreatedRoomDTO?, ErrorDTO?> responseDTO =
-                    await _roomService.GetRoomsAsync(filterParams);
-
+                    await _roomService.GetRoomsAsync(encryptedFilter);
+                responseDTO.Next = _encrypter.EncryptString(
+                    JsonSerializer.Serialize(responseDTO.Next)
+                );
+                responseDTO.Previous = _encrypter.EncryptString(
+                    JsonSerializer.Serialize(responseDTO.Previous)
+                );
                 return CreateListResponse(responseDTO);
             }
             catch (Exception ex)
@@ -116,42 +117,40 @@ namespace api.Controllers
             }
         }
 
-        // [HttpGet("{id}")]
-        [HttpGet("/TestRoom/")]
-        public IActionResult GetRoomById()
-        // public async Task<ActionResult<ResponseDTO<CreatedRoomDTO?, ErrorDTO?>>> GetRoomById(int id)
-        {
-            FilterParamsDTO test = new()
-            {
-                Limit = 10,
-                SortOrder = 0,
-                Cursor = null,
-                SortBy = null,
-                Filter = null,
-            };
-            var Output = _encrypter.EncryptString(JsonSerializer.Serialize(test));
-            return Ok(Output);
-        }
+        // [HttpGet("/TestRoomFilter/")]
+        // public IActionResult GetRoomById()
+        // {
+        //     FilterParamsDTO initialFilter = new()
+        //     {
+        //         Limit = 10,
+        //         SortOrder = 0,
+        //         Cursor = null,
+        //         SortBy = null,
+        //         Filter = null,
+        //     };
+        //     string Output = _encrypter.EncryptString(JsonSerializer.Serialize(initialFilter));
+        //     return Ok(Output);
+        // }
 
-        [HttpGet("testRoom2")]
-        public IActionResult Test()
-        {
-            _logger.CustomDebug("this is a message send by API Hotels");
-            try
-            {
-                var testObject = new
-                {
-                    message = "hola",
-                    value = 42,
-                    isActive = true,
-                };
-                return Ok(testObject);
-            }
-            catch (Exception response)
-            {
-                return StatusCode(StatusCodes.Status500InternalServerError, new { response });
-            }
-        }
+        // [HttpGet("testRoom2")]
+        // public IActionResult Test()
+        // {
+        //     _logger.CustomDebug("this is a message send by API Hotels");
+        //     try
+        //     {
+        //         var testObject = new
+        //         {
+        //             message = "hola",
+        //             value = 42,
+        //             isActive = true,
+        //         };
+        //         return Ok(testObject);
+        //     }
+        //     catch (Exception response)
+        //     {
+        //         return StatusCode(StatusCodes.Status500InternalServerError, new { response });
+        //     }
+        // }
 
         [HttpGet]
         [Route("/getRoomType")]
