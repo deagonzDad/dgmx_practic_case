@@ -1,6 +1,6 @@
 using System;
 
-namespace api.DTO.SetttingsDTO;
+namespace api.DTO.SettingsDTO;
 
 public class EncryptKeysDTO
 {

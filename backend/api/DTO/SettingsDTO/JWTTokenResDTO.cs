@@ -1,7 +1,7 @@
 using System;
 using api.DTO.Interfaces;
 
-namespace api.DTO.SetttingsDTO;
+namespace api.DTO.SettingsDTO;
 
 public class JWTTokenResDTO : IResponseData
 {

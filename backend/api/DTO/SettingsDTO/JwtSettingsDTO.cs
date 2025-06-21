@@ -1,4 +1,4 @@
-namespace api.DTO.SetttingsDTO;
+namespace api.DTO.SettingsDTO;
 
 public class JwtSettingsDTO
 {
