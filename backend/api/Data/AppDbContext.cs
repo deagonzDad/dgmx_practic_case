@@ -15,29 +15,28 @@ namespace api.Data
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);
+            modelBuilder.Entity<Reservation>(builder =>
+            {
+                builder
+                    .HasOne(r => r.User)
+                    .WithMany(u => u.Reservations)
+                    .HasForeignKey(r => r.UserId);
 
-            modelBuilder
-                .Entity<Reservation>()
-                .HasOne(r => r.User)
-                .WithMany(u => u.Reservations)
-                .HasForeignKey(r => r.UserId);
-            modelBuilder
-                .Entity<Reservation>()
-                .HasOne(r => r.Room)
-                .WithMany(u => u.Reservations)
-                .HasForeignKey(r => r.RoomId);
+                builder
+                    .HasOne(r => r.Room)
+                    .WithMany(r => r.Reservations)
+                    .HasForeignKey(r => r.RoomId);
+                builder
+                    .HasOne(r => r.Payment)
+                    .WithOne(r => r.Reservation)
+                    .HasForeignKey<Payment>(r => r.ReservationId);
+            });
 
             modelBuilder
                 .Entity<User>()
                 .HasMany(r => r.Roles)
                 .WithMany(u => u.Users)
                 .UsingEntity<UserRole>();
-
-            modelBuilder
-                .Entity<Payment>()
-                .HasOne(r => r.Reservation)
-                .WithOne(u => u.Payment)
-                .HasForeignKey<Payment>(p => p.ReservationId);
         }
     }
 }

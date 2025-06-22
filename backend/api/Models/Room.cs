@@ -27,7 +27,7 @@ public class Room
     public bool IsActive { get; set; } = true;
 
     [Required]
-    public virtual ICollection<Reservation> Reservations { get; set; } = [];
+    public ICollection<Reservation> Reservations { get; set; } = [];
 }
 
 public enum RoomType
