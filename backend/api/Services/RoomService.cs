@@ -55,7 +55,7 @@ public class RoomService : IRoomService
             responseDTO.Success = true;
             return responseDTO;
         }
-        catch (DbUpdateException ex)
+        catch (UpdateException ex)
         {
             return _errorHandler.CreateErrorRes(
                 ex,
@@ -106,17 +106,6 @@ public class RoomService : IRoomService
                 _logger
             );
         }
-        catch (Exception ex)
-        {
-            return _errorHandler.CreateErrorListRes(
-                ex,
-                responseDTO,
-                "Something went wrong",
-                "Something went wrong doing the request to the database",
-                StatusCodes.Status500InternalServerError,
-                _logger
-            );
-        }
     }
 
     public async Task<ResponseDTO<CreatedRoomDTO?, ErrorDTO?>> UpdateRoomAsync(
@@ -138,7 +127,7 @@ public class RoomService : IRoomService
             responseDTO.Success = true;
             return responseDTO;
         }
-        catch (DbUpdateException ex)
+        catch (UpdateException ex)
         {
             return _errorHandler.CreateErrorRes(
                 ex,
@@ -173,6 +162,34 @@ public class RoomService : IRoomService
                 _logger
             );
         }
-        throw new NotImplementedException();
+    }
+
+    public async Task<ResponseDTO<CreatedRoomDTO?, ErrorDTO?>> GetRoomByIdAsync(int roomId)
+    {
+        // GetRoomByIdAsync
+        ResponseDTO<CreatedRoomDTO?, ErrorDTO?> responseDTO = new()
+        {
+            Success = false,
+            Message = "",
+        };
+        try
+        {
+            Room room = await _roomRepository.GetRoomByIdAsync(roomId);
+            responseDTO.Data = _mapper.Map<CreatedRoomDTO>(room);
+            responseDTO.Message = "Success in the room retrieval";
+            responseDTO.Success = true;
+            return responseDTO;
+        }
+        catch (RoomNotFoundException ex)
+        {
+            return _errorHandler.CreateErrorRes(
+                ex,
+                responseDTO,
+                "Room Not Found",
+                "Room not found in the database",
+                StatusCodes.Status404NotFound,
+                _logger
+            );
+        }
     }
 }

@@ -56,11 +56,11 @@ public class AuthService : IAuthService
         try
         {
             string userEmail =
-                userDTO.Email ?? userDTO.Username ?? throw new UserNotFoundException();
+                userDTO.Email ?? userDTO.Username ?? throw new UserNotFoundException(null);
             User user = await _userRepository.GetUserByEmailOrUsernameAsync(userEmail);
             if (!_hasher.VerifyPassword(userDTO.Password, user.Password))
             {
-                throw new UnauthorizedActionException();
+                throw new UnauthorizedActionException(null);
             }
             JWTTokenResDTO tokenDTO = _jwtGenerator.GenerateToken(user);
             responseDTO.Data = tokenDTO;
@@ -114,7 +114,7 @@ public class AuthService : IAuthService
             responseDTO.Code = 201;
             return responseDTO;
         }
-        catch (DbUpdateException ex)
+        catch (UpdateException ex)
         {
             await transaction.RollbackAsync();
             return _errorHandler.CreateErrorRes(
@@ -138,18 +138,18 @@ public class AuthService : IAuthService
                 _logger
             );
         }
-        catch (Exception ex)
-        {
-            await transaction.RollbackAsync();
-            return _errorHandler.CreateErrorRes(
-                ex,
-                responseDTO,
-                "something went wrong in the request",
-                "An error occurred while processing your request.",
-                StatusCodes.Status500InternalServerError,
-                _logger
-            );
-        }
+        // catch (Exception ex)
+        // {
+        //     await transaction.RollbackAsync();
+        //     return _errorHandler.CreateErrorRes(
+        //         ex,
+        //         responseDTO,
+        //         "something went wrong in the request",
+        //         "An error occurred while processing your request.",
+        //         StatusCodes.Status500InternalServerError,
+        //         _logger
+        //     );
+        // }
         finally
         {
             await transaction.DisposeAsync();

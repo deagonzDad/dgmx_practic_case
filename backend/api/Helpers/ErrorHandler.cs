@@ -1,5 +1,6 @@
 using api.DTO.Interfaces;
 using api.DTO.ResponseDTO;
+using api.Exceptions;
 using api.Helpers.Instances;
 
 namespace api.Helpers;
@@ -10,7 +11,7 @@ public class ErrorHandler : IErrorHandler
     private string ErrorCode { get; set; } = string.Empty;
 
     public DataListPaginationDTO<TData, ErrorDTO?> CreateErrorListRes<TData>(
-        Exception ex,
+        BaseApiException ex,
         DataListPaginationDTO<TData, ErrorDTO?> responseDTO,
         string messageRes,
         string logMessage,
@@ -22,7 +23,7 @@ public class ErrorHandler : IErrorHandler
     {
         if (isLogMessage)
         {
-            logger?.LogError(ex, "{logMessage}", logMessage);
+            logger?.LogError(ex.LogError, "{logMessage}", logMessage);
         }
         responseDTO.Error = new ErrorDTO
         {
@@ -35,7 +36,7 @@ public class ErrorHandler : IErrorHandler
     }
 
     public ResponseDTO<TData, ErrorDTO?> CreateErrorRes<TData>(
-        Exception ex,
+        BaseApiException ex,
         ResponseDTO<TData, ErrorDTO?> responseDTO,
         string messageRes,
         string logMessage,
@@ -47,7 +48,7 @@ public class ErrorHandler : IErrorHandler
     {
         if (isLogMessage)
         {
-            logger?.LogError(ex, "{logMessage}", logMessage);
+            logger?.LogError(ex.LogError, "{logMessage}", logMessage);
         }
         responseDTO.Success = false;
         responseDTO.Message = messageRes;

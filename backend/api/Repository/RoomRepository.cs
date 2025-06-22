@@ -20,17 +20,24 @@ public class RoomRepository(AppDbContext context) : IRoomRepository
 
     public async Task<(bool, Room)> CreateRoomAsync(Room room)
     {
-        Room? existedRoom = await _context.Rooms.FirstOrDefaultAsync(el =>
-            el.RoomNumber == room.RoomNumber
-        );
-        bool isNew = existedRoom == null;
-        if (isNew)
+        try
         {
-            await _context.Rooms.AddAsync(room);
-            await _context.SaveChangesAsync();
-            return (isNew, room);
+            Room? existedRoom = await _context.Rooms.FirstOrDefaultAsync(el =>
+                el.RoomNumber == room.RoomNumber
+            );
+            bool isNew = existedRoom == null;
+            if (isNew)
+            {
+                await _context.Rooms.AddAsync(room);
+                await _context.SaveChangesAsync();
+                return (isNew, room);
+            }
+            return (isNew, existedRoom!);
         }
-        return (isNew, existedRoom!);
+        catch (DbUpdateException ex)
+        {
+            throw new UpdateException(ex);
+        }
     }
 
     public async Task LogicDeleteRoomAsync(Room room)
@@ -43,7 +50,7 @@ public class RoomRepository(AppDbContext context) : IRoomRepository
     {
         Room room =
             await _context.Rooms.FirstOrDefaultAsync(el => el.Id == Id)
-            ?? throw new RoomNotFoundException();
+            ?? throw new RoomNotFoundException(null);
         return room;
     }
 
@@ -103,7 +110,7 @@ public class RoomRepository(AppDbContext context) : IRoomRepository
                 query = ((IOrderedQueryable<Room>)query).ThenByDescending(r => r.Id);
             }
         }
-
+        int totalCount = await query.CountAsync();
         if (
             !string.IsNullOrWhiteSpace(filterParams.Cursor)
             && int.TryParse(filterParams.Cursor, out int cursorId)
@@ -118,14 +125,13 @@ public class RoomRepository(AppDbContext context) : IRoomRepository
                 query = query.Where(r => r.Id < cursorId);
             }
         }
-        int totalCount = await query.CountAsync();
         List<Room> rooms = await query.Take(filterParams.Limit + 1).ToListAsync();
         bool hasMore = rooms.Count > filterParams.Limit;
-        int? nextLastId = hasMore ? rooms[^1].Id : null;
         if (hasMore)
         {
             rooms.RemoveAt(rooms.Count - 1);
         }
+        int? nextLastId = hasMore ? rooms[^1].Id : null;
         return (rooms, nextLastId, totalCount);
     }
 
@@ -134,14 +140,17 @@ public class RoomRepository(AppDbContext context) : IRoomRepository
         try
         {
             Room existedRoom =
-                await _context.Rooms.FindAsync(updatedRoom.Id) ?? throw new RoomNotFoundException();
-            _context.Entry(existedRoom).CurrentValues.SetValues(updatedRoom);
+                await _context.Rooms.FindAsync(roomId) ?? throw new RoomNotFoundException(null);
+            existedRoom.RoomNumber = updatedRoom.RoomNumber;
+            existedRoom.RoomType = updatedRoom.RoomType;
+            existedRoom.PricePerNight = updatedRoom.PricePerNight;
+            existedRoom.IsAvailable = updatedRoom.IsAvailable;
             await _context.SaveChangesAsync();
             return existedRoom;
         }
-        catch (Exception)
+        catch (DbUpdateException ex)
         {
-            throw new RoomNotFoundException();
+            throw new UpdateException(ex);
         }
     }
 

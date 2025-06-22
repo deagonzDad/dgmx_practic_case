@@ -22,13 +22,15 @@ public class CreateRoomDTO : BaseRoomDTO { }
 
 public class UpdateRoomDTO : BaseRoomDTO
 {
+    [Range(1, int.MaxValue, ErrorMessage = "The value must be greater than 0")]
+    public new int? Number { get; set; }
+    public new RoomType Type { get; set; } = RoomType.Single;
+
+    [Range(0, double.MaxValue, ErrorMessage = "The value must be 0 or positive")]
+    public new decimal? PricePerNight { get; set; }
+
     [Required]
     public bool IsAvailable { get; set; }
-
-    [Required]
-    public bool IsActive { get; set; }
-
-    // public int Id { get; set; }
 }
 
 public class CreatedRoomDTO : BaseRoomDTO

@@ -51,7 +51,7 @@ namespace api.Controllers
         }
 
         [HttpPut("/{IdRoom}")]
-        public async Task<ActionResult<ResponseDTO<CreatedRoomDTO?, ErrorDTO?>>> UpdateRoom(
+        public async Task<ActionResult<ResponseDTO<CreatedRoomDTO?, ErrorDTO?>>> UpdateRoomById(
             int IdRoom,
             [FromBody] UpdateRoomDTO room
         )
@@ -95,16 +95,47 @@ namespace api.Controllers
                         new { res = ModelState }
                     );
                 }
-                encryptedFilter.Cursor = _encrypter.DecryptString(token);
+                string decrypted = _encrypter.DecryptString(token);
+                encryptedFilter.Cursor = string.IsNullOrEmpty(decrypted) ? null : decrypted;
                 DataListPaginationDTO<CreatedRoomDTO?, ErrorDTO?> responseDTO =
                     await _roomService.GetRoomsAsync(encryptedFilter);
-                responseDTO.Next = _encrypter.EncryptString(
-                    JsonSerializer.Serialize(responseDTO.Next)
-                );
-                responseDTO.Previous = _encrypter.EncryptString(
-                    JsonSerializer.Serialize(responseDTO.Previous)
-                );
+                responseDTO.Next = string.IsNullOrEmpty(responseDTO.Next)
+                    ? null
+                    : _encrypter.EncryptString(responseDTO.Next);
+                responseDTO.Previous = string.IsNullOrEmpty(responseDTO.Previous)
+                    ? null
+                    : _encrypter.EncryptString(responseDTO.Previous);
+
                 return CreateListResponse(responseDTO);
+            }
+            catch (Exception ex)
+            {
+                string messageError = "Something goes wrong unexpectedly";
+                _logger.LogError(ex, "{messageError}", messageError);
+                return StatusCode(
+                    StatusCodes.Status500InternalServerError,
+                    new { res = ModelState }
+                );
+            }
+        }
+
+        [HttpGet("/{IdRoom}")]
+        public async Task<ActionResult<ResponseDTO<CreatedRoomDTO?, ErrorDTO?>>> GetRoomById(
+            int IdRoom
+        )
+        {
+            try
+            {
+                if (!ModelState.IsValid)
+                {
+                    return StatusCode(
+                        StatusCodes.Status500InternalServerError,
+                        new { res = ModelState }
+                    );
+                }
+                ResponseDTO<CreatedRoomDTO?, ErrorDTO?> responseDTO =
+                    await _roomService.GetRoomByIdAsync(IdRoom);
+                return CreateResponse(responseDTO);
             }
             catch (Exception ex)
             {

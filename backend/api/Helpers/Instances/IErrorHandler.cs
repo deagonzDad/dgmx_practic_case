@@ -1,5 +1,6 @@
 using api.DTO.Interfaces;
 using api.DTO.ResponseDTO;
+using api.Exceptions;
 
 namespace api.Helpers.Instances;
 
@@ -7,7 +8,7 @@ public interface IErrorHandler
 {
     void InitService(string errorDetail, string errorCode);
     public ResponseDTO<TData, ErrorDTO?> CreateErrorRes<TData>(
-        Exception ex,
+        BaseApiException ex,
         ResponseDTO<TData, ErrorDTO?> responseDTO,
         string messageRes,
         string logMessage,
@@ -17,7 +18,7 @@ public interface IErrorHandler
     )
         where TData : IResponseData?;
     public DataListPaginationDTO<TData, ErrorDTO?> CreateErrorListRes<TData>(
-        Exception ex,
+        BaseApiException ex,
         DataListPaginationDTO<TData, ErrorDTO?> responseDTO,
         string messageRes,
         string logMessage,

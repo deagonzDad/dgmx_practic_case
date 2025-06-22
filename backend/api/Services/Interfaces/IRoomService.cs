@@ -13,4 +13,6 @@ public interface IRoomService
         UpdateRoomDTO roomDTO,
         int IdRoom
     );
+    Task<ResponseDTO<BaseRoomDTO?, ErrorDTO?>> DeleteRoomAsync(int roomId);
+    Task<ResponseDTO<CreatedRoomDTO?, ErrorDTO?>> GetRoomByIdAsync(int roomId);
 }

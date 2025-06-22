@@ -16,7 +16,7 @@ public class UserRepository(AppDbContext context) : IUserRepository
             await _context
                 .Users.Where(r => r.Username == username)
                 .Include(u => u.Roles)
-                .FirstOrDefaultAsync() ?? throw new UserNotFoundException();
+                .FirstOrDefaultAsync() ?? throw new UserNotFoundException(null);
         return user;
     }
 
@@ -25,7 +25,7 @@ public class UserRepository(AppDbContext context) : IUserRepository
         User user =
             await _context
                 .Users.Where(r => r.Email == emailOrUsername || r.Username == emailOrUsername)
-                .FirstOrDefaultAsync() ?? throw new UserNotFoundException();
+                .FirstOrDefaultAsync() ?? throw new UserNotFoundException(null);
         return user;
     }
 
@@ -33,13 +33,20 @@ public class UserRepository(AppDbContext context) : IUserRepository
     {
         User user =
             await _context.Users.Where(r => r.Email == email).FirstOrDefaultAsync()
-            ?? throw new UserNotFoundException();
+            ?? throw new UserNotFoundException(null);
         return user;
     }
 
     public async Task CreateUserAsync(User user)
     {
-        await _context.Users.AddAsync(user);
-        await _context.SaveChangesAsync();
+        try
+        {
+            await _context.Users.AddAsync(user);
+            await _context.SaveChangesAsync();
+        }
+        catch (DbUpdateException ex)
+        {
+            throw new UpdateException(ex);
+        }
     }
 }
