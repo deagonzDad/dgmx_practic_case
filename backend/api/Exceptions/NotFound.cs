@@ -41,13 +41,13 @@ public class ReservationNotFoundException : BaseApiException
     private const string DefaultMessage = "Reserve not found";
     private const int NotFoundCode = 404;
 
-    public ReservationNotFoundException(Exception logError)
+    public ReservationNotFoundException(Exception? logError)
         : base(DefaultMessage, NotFoundCode)
     {
         LogError = logError;
     }
 
-    public ReservationNotFoundException(Exception logError, string message)
+    public ReservationNotFoundException(Exception? logError, string message)
         : base(message, NotFoundCode)
     {
         LogError = logError;
