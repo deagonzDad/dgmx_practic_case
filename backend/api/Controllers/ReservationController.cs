@@ -92,7 +92,7 @@ namespace api.Controllers
             }
         }
 
-        [HttpGet("{IdReservation}")]
+        [HttpGet("/IdReservation")]
         public async Task<
             ActionResult<ResponseDTO<CreatedReservationDTO?, ErrorDTO?>>
         > GetReservationById(int IdReservation)
