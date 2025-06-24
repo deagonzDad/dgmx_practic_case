@@ -26,7 +26,7 @@ public class ReservationRepository(AppDbContext context) : IReservationRepositor
         // nameof(Reservation.Payment),
     ];
 
-    public async Task CreateReservation(Reservation reservation)
+    public async Task CreateReservationAsync(Reservation reservation)
     {
         try
         {
@@ -39,7 +39,7 @@ public class ReservationRepository(AppDbContext context) : IReservationRepositor
         }
     }
 
-    public async Task<Reservation> GetReservationById(int reservationId)
+    public async Task<Reservation> GetReservationByIdAsync(int reservationId)
     {
         Reservation reservation =
             await _context.Reservations.FirstOrDefaultAsync(el => el.Id == reservationId)

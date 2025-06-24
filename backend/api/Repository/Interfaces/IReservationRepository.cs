@@ -6,9 +6,9 @@ namespace api.Repository.Interfaces;
 
 public interface IReservationRepository
 {
-    Task CreateReservation(Reservation reservation);
+    Task CreateReservationAsync(Reservation reservation);
 
     // Task<Reservation> UpdateReservation(Reservation reservation, int reservationId);
-    Task<Reservation> GetReservationById(int reservationId);
+    Task<Reservation> GetReservationByIdAsync(int reservationId);
     Task<(List<Reservation>, int?, int)> GetReservations(FilterParamsDTO filterParams);
 }
