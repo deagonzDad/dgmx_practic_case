@@ -65,7 +65,25 @@ public class RoleNotFoundException : BaseApiException
         LogError = logError;
     }
 
-    public RoleNotFoundException(Exception logError, string message)
+    public RoleNotFoundException(Exception? logError, string message)
+        : base(message, NotFoundCode)
+    {
+        LogError = logError;
+    }
+}
+
+public class PaymentNotFoundException : BaseApiException
+{
+    private const string DefaultMessage = "Payment not found";
+    private const int NotFoundCode = 404;
+
+    public PaymentNotFoundException(Exception? logError)
+        : base(DefaultMessage, NotFoundCode)
+    {
+        LogError = logError;
+    }
+
+    public PaymentNotFoundException(Exception? logError, string message)
         : base(message, NotFoundCode)
     {
         LogError = logError;
