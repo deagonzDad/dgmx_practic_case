@@ -18,6 +18,26 @@ public class RoomRepository(AppDbContext context) : IRoomRepository
         nameof(Room.Id),
     ];
 
+    public async Task<decimal> GetPriceByIdAsync(int Id)
+    {
+        try
+        {
+            decimal? price = await _context
+                .Rooms.Where(ro => ro.Id == Id)
+                .Select(r => (decimal?)r.PricePerNight)
+                .FirstOrDefaultAsync();
+            if (!price.HasValue)
+            {
+                throw new RoomNotFoundException(null);
+            }
+            return (decimal)price;
+        }
+        catch (DbUpdateException ex)
+        {
+            throw new UpdateException(ex);
+        }
+    }
+
     public async Task<(bool, Room)> CreateRoomAsync(Room room)
     {
         try

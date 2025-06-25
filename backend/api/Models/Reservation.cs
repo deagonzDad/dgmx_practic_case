@@ -13,13 +13,13 @@ public class Reservation
     public DateTime CheckInDate { get; set; }
 
     [Required]
-    public DateTime CheckOutDate { get; set; }
+    public DateTime? CheckOutDate { get; set; }
 
     [Required]
     public int NumberOfGuests { get; set; }
 
-    [Required]
-    public decimal TotalPrice { get; set; }
+    // [Required]
+    // public decimal TotalPrice { get; set; }
 
     [Required]
     public int UserId { get; set; }
