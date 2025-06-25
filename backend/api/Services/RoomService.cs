@@ -1,4 +1,5 @@
 using System;
+using api.Data;
 using api.DTO.ResponseDTO;
 using api.DTO.RoomsDTO;
 using api.Exceptions;
@@ -8,6 +9,7 @@ using api.Repository.Interfaces;
 using api.Services.Interfaces;
 using AutoMapper;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Storage;
 
 namespace api.Services;
 
@@ -17,14 +19,17 @@ public class RoomService : IRoomService
     private readonly IMapper _mapper;
     private readonly IErrorHandler _errorHandler;
     private readonly ILogger<RoomService> _logger;
+    private readonly AppDbContext _dbContext;
 
     public RoomService(
+        AppDbContext dbContext,
         IRoomRepository roomRepository,
         IMapper mapper,
         IErrorHandler errorHandler,
         ILogger<RoomService> logger
     )
     {
+        _dbContext = dbContext;
         _roomRepository = roomRepository;
         _mapper = mapper;
         _errorHandler = errorHandler;
@@ -41,6 +46,7 @@ public class RoomService : IRoomService
             Success = false,
             Message = "",
         };
+        using IDbContextTransaction transaction = await _dbContext.Database.BeginTransactionAsync();
         try
         {
             Room roomMdl = _mapper.Map<Room>(roomDTO);
@@ -50,6 +56,7 @@ public class RoomService : IRoomService
                 room = _roomRepository.SetRoomActivation(room, true);
                 await _roomRepository.UpdateRoomAsync(room, room.Id);
             }
+            await transaction.CommitAsync();
             responseDTO.Data = _mapper.Map<CreatedRoomDTO>(roomMdl);
             responseDTO.Message = "Success in the room creation";
             responseDTO.Success = true;
@@ -57,6 +64,7 @@ public class RoomService : IRoomService
         }
         catch (UpdateException ex)
         {
+            await transaction.RollbackAsync();
             return _errorHandler.CreateErrorRes(
                 ex,
                 responseDTO,
@@ -65,6 +73,10 @@ public class RoomService : IRoomService
                 StatusCodes.Status400BadRequest,
                 _logger
             );
+        }
+        finally
+        {
+            await transaction.DisposeAsync();
         }
     }
 
@@ -118,6 +130,7 @@ public class RoomService : IRoomService
             Success = false,
             Message = "",
         };
+        using IDbContextTransaction transaction = await _dbContext.Database.BeginTransactionAsync();
         try
         {
             Room roomObj = _mapper.Map<Room>(room);
@@ -143,16 +156,19 @@ public class RoomService : IRoomService
     public async Task<ResponseDTO<BaseRoomDTO?, ErrorDTO?>> DeleteRoomAsync(int roomId)
     {
         ResponseDTO<BaseRoomDTO?, ErrorDTO?> responseDTO = new() { Success = false, Message = "" };
+        using IDbContextTransaction transaction = await _dbContext.Database.BeginTransactionAsync();
         try
         {
             Room roomToDel = await _roomRepository.GetRoomByIdAsync(roomId);
             await _roomRepository.LogicDeleteRoomAsync(roomToDel);
+            await transaction.CommitAsync();
             responseDTO.Message = "Success in the room deletion";
             responseDTO.Success = true;
             return responseDTO;
         }
         catch (RoomNotFoundException ex)
         {
+            await transaction.RollbackAsync();
             return _errorHandler.CreateErrorRes(
                 ex,
                 responseDTO,
@@ -162,11 +178,14 @@ public class RoomService : IRoomService
                 _logger
             );
         }
+        finally
+        {
+            await transaction.DisposeAsync();
+        }
     }
 
     public async Task<ResponseDTO<CreatedRoomDTO?, ErrorDTO?>> GetRoomByIdAsync(int roomId)
     {
-        // GetRoomByIdAsync
         ResponseDTO<CreatedRoomDTO?, ErrorDTO?> responseDTO = new()
         {
             Success = false,

@@ -1,4 +1,5 @@
 using System;
+using api.Data;
 using api.DTO.ReservationsDTO;
 using api.DTO.ResponseDTO;
 using api.Exceptions;
@@ -13,18 +14,27 @@ namespace api.Services;
 public class ReservationService : IReservationService
 {
     private readonly IReservationRepository _reservationRepository;
+    private readonly IPaymentRepository _paymentRepository;
+    private readonly IRoomRepository _roomRepository;
     private readonly IMapper _mapper;
     private readonly ILogger<ReservationService> _logger;
     private readonly IErrorHandler _errorHandler;
+    private readonly AppDbContext _dbContext;
 
     public ReservationService(
+        AppDbContext dbContext,
         IReservationRepository reservationRepository,
+        IPaymentRepository paymentRepository,
+        IRoomRepository roomRepository,
         IMapper mapper,
         IErrorHandler errorHandler,
         ILogger<ReservationService> logger
     )
     {
+        _dbContext = dbContext;
         _reservationRepository = reservationRepository;
+        _paymentRepository = paymentRepository;
+        _roomRepository = roomRepository;
         _mapper = mapper;
         _errorHandler = errorHandler;
         _logger = logger;
@@ -40,10 +50,19 @@ public class ReservationService : IReservationService
             Success = false,
             Message = "",
         };
+        using var transaction = await _dbContext.Database.BeginTransactionAsync();
         try
         {
+            decimal price = await _roomRepository.GetPriceByIdAsync(reservation.RoomId);
+            Payment payment = _mapper.Map<Payment>(reservation);
+            payment.AmountPerNight = price;
+            (bool isSaveIt, Payment paymentCreated) = await _paymentRepository.CreatePaymentAsync(
+                payment
+            );
             Reservation reservationMdl = _mapper.Map<Reservation>(reservation);
+            reservationMdl.PaymentId = paymentCreated.Id;
             await _reservationRepository.CreateReservationAsync(reservationMdl);
+            await transaction.CommitAsync();
             responseDTO.Data = _mapper.Map<CreatedReservationDTO>(reservationMdl);
             responseDTO.Message = "Success in the reservation creation";
             responseDTO.Success = true;
@@ -51,6 +70,7 @@ public class ReservationService : IReservationService
         }
         catch (UpdateException ex)
         {
+            await transaction.RollbackAsync();
             return _errorHandler.CreateErrorRes(
                 ex,
                 responseDTO,
@@ -59,6 +79,10 @@ public class ReservationService : IReservationService
                 StatusCodes.Status400BadRequest,
                 _logger
             );
+        }
+        finally
+        {
+            await transaction.DisposeAsync();
         }
     }
 
