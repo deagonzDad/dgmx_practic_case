@@ -7,10 +7,6 @@ namespace api.Mappers;
 
 public class ReservesProfile : Profile
 {
-    // public ReserveProfile(){
-    //     CreateMap<Reserve, ReserveDTO>();
-    //     CreateMap<
-    // }
     public ReservesProfile()
     {
         ConfigureModelToDTOMapping();

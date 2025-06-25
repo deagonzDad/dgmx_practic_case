@@ -10,7 +10,8 @@ public class Payment
     public int Id { get; set; }
 
     [Required]
-    public decimal Amount { get; set; }
+    public decimal AmountPerNight { get; set; }
+    public decimal? TotalAmount { get; set; }
 
     [Required]
     public DateTime PaymentDate { get; set; }
