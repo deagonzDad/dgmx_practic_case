@@ -26,6 +26,7 @@ public static class ServiceExtensions
         services.AddScoped<IRoomRepository, RoomRepository>();
         services.AddScoped<IReservationRepository, ReservationRepository>();
         services.AddScoped<IPaymentRepository, PaymentRepository>();
+        services.AddScoped<IUserRepository, UserRepository>();
     }
 
     public static void ConfigureServices(this IServiceCollection services)
@@ -33,6 +34,7 @@ public static class ServiceExtensions
         services.AddScoped<IAuthService, AuthService>();
         services.AddScoped<IRoomService, RoomService>();
         services.AddScoped<IReservationService, ReservationService>();
+        services.AddScoped<IUserService, UserService>();
     }
 
     public static void ConfigureHelpers(this IServiceCollection services)

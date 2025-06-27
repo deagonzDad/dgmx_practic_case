@@ -30,6 +30,7 @@ public class User
 
     [MaxLength(100)]
     public string LastName { get; set; } = "";
+    public bool IsActive { get; set; } = true;
     public ICollection<Reservation> Reservations { get; set; } = [];
 
     // public virtual ICollection<UserReservation> UserReservations { get; set; } = [];
