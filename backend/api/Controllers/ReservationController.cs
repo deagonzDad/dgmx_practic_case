@@ -25,7 +25,7 @@ namespace api.Controllers
 
         [HttpPost]
         public async Task<
-            ActionResult<ResponseDTO<CreatedReservationDTO?, ErrorDTO?>>
+            ActionResult<ResponseDTO<CreatedReservationListDTO?, ErrorDTO?>>
         > CreateReservation([FromBody] CreateReservationDTO reservation)
         {
             try
@@ -37,7 +37,7 @@ namespace api.Controllers
                         new { res = ModelState }
                     );
                 }
-                ResponseDTO<CreatedReservationDTO?, ErrorDTO?> responseDTO =
+                ResponseDTO<CreatedReservationListDTO?, ErrorDTO?> responseDTO =
                     await _reservationService.CreateReservationAsync(reservation);
                 return CreateResponse(responseDTO);
             }

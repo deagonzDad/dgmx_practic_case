@@ -81,9 +81,7 @@ public class RoomRepository(AppDbContext context) : IRoomRepository
         if (!string.IsNullOrEmpty(filterParams.Filter))
         {
             string lowerCaseFilter = filterParams.Filter.ToLower();
-            query = query.Where(data =>
-                data.RoomNumber.ToString().Contains(lowerCaseFilter.ToString())
-            );
+            query = query.Where(data => data.RoomNumber.ToString().Contains(lowerCaseFilter));
         }
         bool hasSortBy =
             !string.IsNullOrWhiteSpace(filterParams.SortBy)
