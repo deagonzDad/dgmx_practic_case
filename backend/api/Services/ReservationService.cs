@@ -60,7 +60,20 @@ public class ReservationService : IReservationService
                 payment
             );
             Reservation reservationMdl = _mapper.Map<Reservation>(reservation);
-            reservationMdl.PaymentId = paymentCreated.Id;
+            reservationMdl.Payment = paymentCreated;
+            reservationMdl.Payment.Reservation = reservationMdl;
+            User userAttach = new()
+            {
+                Id = reservation.ClientId,
+                Username = string.Empty,
+                Password = string.Empty,
+                Email = string.Empty,
+            };
+            Room roomAttach = new() { Id = reservation.RoomId };
+            _dbContext.Rooms.Attach(roomAttach);
+            _dbContext.Users.Attach(userAttach);
+            reservationMdl.User = userAttach;
+            reservationMdl.Room = roomAttach;
             await _reservationRepository.CreateReservationAsync(reservationMdl);
             await transaction.CommitAsync();
             responseDTO.Data = _mapper.Map<CreatedReservationDTO>(reservationMdl);
@@ -119,18 +132,18 @@ public class ReservationService : IReservationService
     }
 
     public async Task<
-        DataListPaginationDTO<CreatedReservationDTO?, ErrorDTO?>
+        DataListPaginationDTO<CreatedReservationListDTO?, ErrorDTO?>
     > GetReservationsAsync(FilterParamsDTO filterParams)
     {
-        DataListPaginationDTO<CreatedReservationDTO?, ErrorDTO?> responseDTO = new() { };
+        DataListPaginationDTO<CreatedReservationListDTO?, ErrorDTO?> responseDTO = new() { };
         try
         {
-            (List<Reservation> query, int? nextCursor, int totalCount) =
+            (List<CreatedReservationListDTO> dataList, int? nextCursor, int totalCount) =
                 await _reservationRepository.GetReservations(filterParams);
-            List<CreatedReservationDTO> reservationsMap = _mapper.Map<List<CreatedReservationDTO>>(
-                query
-            );
-            responseDTO.Data = reservationsMap!;
+            // List<CreatedReservationListDTO> reservationsMap = _mapper.Map<
+            //     List<CreatedReservationListDTO>
+            // >(query);
+            responseDTO.Data = dataList!;
             responseDTO.TotalRecords = totalCount;
             responseDTO.Next = nextCursor.ToString();
             responseDTO.Previous = filterParams.Cursor;

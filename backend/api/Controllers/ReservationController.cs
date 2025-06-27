@@ -54,7 +54,7 @@ namespace api.Controllers
 
         [HttpGet]
         public async Task<
-            ActionResult<DataListPaginationDTO<CreatedReservationDTO?, ErrorDTO?>>
+            ActionResult<DataListPaginationDTO<CreatedReservationListDTO?, ErrorDTO?>>
         > GetReservations(
             [FromQuery] FilterParamsDTO encryptedFilter,
             [FromQuery(Name = "token")] string? token
@@ -71,7 +71,7 @@ namespace api.Controllers
                 }
                 string decrypted = _encrypter.DecryptString(token);
                 encryptedFilter.Cursor = string.IsNullOrEmpty(decrypted) ? null : decrypted;
-                DataListPaginationDTO<CreatedReservationDTO?, ErrorDTO?> responseDTO =
+                DataListPaginationDTO<CreatedReservationListDTO?, ErrorDTO?> responseDTO =
                     await _reservationService.GetReservationsAsync(encryptedFilter);
                 responseDTO.Next = string.IsNullOrEmpty(responseDTO.Next)
                     ? null

@@ -1,4 +1,5 @@
 using System;
+using api.DTO.ReservationsDTO;
 using api.DTO.ResponseDTO;
 using api.Models;
 
@@ -10,5 +11,7 @@ public interface IReservationRepository
 
     // Task<Reservation> UpdateReservation(Reservation reservation, int reservationId);
     Task<Reservation> GetReservationByIdAsync(int reservationId);
-    Task<(List<Reservation>, int?, int)> GetReservations(FilterParamsDTO filterParams);
+    Task<(List<CreatedReservationListDTO>, int?, int)> GetReservations(
+        FilterParamsDTO filterParams
+    );
 }

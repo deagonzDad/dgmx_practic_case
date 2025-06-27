@@ -8,7 +8,7 @@ public interface IReservationService
     Task<ResponseDTO<CreatedReservationDTO?, ErrorDTO?>> CreateReservationAsync(
         CreateReservationDTO reservation
     );
-    Task<DataListPaginationDTO<CreatedReservationDTO?, ErrorDTO?>> GetReservationsAsync(
+    Task<DataListPaginationDTO<CreatedReservationListDTO?, ErrorDTO?>> GetReservationsAsync(
         FilterParamsDTO filterParams
     );
     Task<ResponseDTO<CreatedReservationDTO?, ErrorDTO?>> GetReservationByIdAsync(int reservationId);

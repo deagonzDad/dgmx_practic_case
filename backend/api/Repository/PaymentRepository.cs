@@ -17,7 +17,7 @@ public class PaymentRepository(AppDbContext context) : IPaymentRepository
         try
         {
             await _context.Payments.AddAsync(payment);
-            await _context.SaveChangesAsync();
+            // await _context.SaveChangesAsync();
             return (true, payment);
         }
         catch (DbUpdateException ex)

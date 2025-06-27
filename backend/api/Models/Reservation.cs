@@ -12,7 +12,7 @@ public class Reservation
     [Required]
     public DateTime CheckInDate { get; set; }
 
-    [Required]
+    // [Required]
     public DateTime? CheckOutDate { get; set; }
 
     [Required]

@@ -31,7 +31,6 @@ namespace api.Data
                     .WithOne(r => r.Reservation)
                     .HasForeignKey<Payment>(r => r.ReservationId);
             });
-
             modelBuilder
                 .Entity<User>()
                 .HasMany(r => r.Roles)

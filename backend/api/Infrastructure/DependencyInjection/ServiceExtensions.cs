@@ -24,13 +24,15 @@ public static class ServiceExtensions
         services.AddScoped<IUserRepository, UserRepository>();
         services.AddScoped<IRoleRepository, RoleRepository>();
         services.AddScoped<IRoomRepository, RoomRepository>();
-        // services.AddScoped<IReservationRepository, ReservationRepository>();
+        services.AddScoped<IReservationRepository, ReservationRepository>();
+        services.AddScoped<IPaymentRepository, PaymentRepository>();
     }
 
     public static void ConfigureServices(this IServiceCollection services)
     {
         services.AddScoped<IAuthService, AuthService>();
         services.AddScoped<IRoomService, RoomService>();
+        services.AddScoped<IReservationService, ReservationService>();
     }
 
     public static void ConfigureHelpers(this IServiceCollection services)
@@ -50,6 +52,7 @@ public static class ServiceExtensions
             cfg.AddProfile<UsersProfile>();
             cfg.AddProfile<RoomsProfile>();
             cfg.AddProfile<ReservesProfile>();
+            cfg.AddProfile<PaymentProfile>();
         });
     }
 

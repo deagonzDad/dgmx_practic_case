@@ -12,10 +12,13 @@ namespace api.Controllers
     [Route("api/[controller]")]
     [ApiController]
     [Authorize]
-    public class Rooms(IRoomService roomService, ILogger<Rooms> logger, IEncrypter encrypter)
-        : MyBaseController
+    public class RoomsController(
+        IRoomService roomService,
+        ILogger<Room> logger,
+        IEncrypter encrypter
+    ) : MyBaseController
     {
-        private readonly ILogger<Rooms> _logger = logger;
+        private readonly ILogger<Room> _logger = logger;
         private readonly IRoomService _roomService = roomService;
         private readonly IEncrypter _encrypter = encrypter;
 

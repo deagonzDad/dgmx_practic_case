@@ -1,6 +1,7 @@
 using System;
 using System.Linq.Expressions;
 using api.Data;
+using api.DTO.ReservationsDTO;
 using api.DTO.ResponseDTO;
 using api.Exceptions;
 using api.Models;
@@ -17,7 +18,7 @@ public class ReservationRepository(AppDbContext context) : IReservationRepositor
     [
         nameof(Reservation.Id),
         nameof(Reservation.NumberOfGuests),
-        nameof(Reservation.TotalPrice),
+        // nameof(Reservation.TotalPrice),
         // nameof(Reservation.UserId),
         // nameof(Reservation.RoomId),
         // nameof(Reservation.PaymentId),
@@ -42,12 +43,18 @@ public class ReservationRepository(AppDbContext context) : IReservationRepositor
     public async Task<Reservation> GetReservationByIdAsync(int reservationId)
     {
         Reservation reservation =
-            await _context.Reservations.FirstOrDefaultAsync(el => el.Id == reservationId)
+            await _context
+                .Reservations.Include(r => r.User)
+                .Include(r => r.Room)
+                .Include(r => r.Payment)
+                .FirstOrDefaultAsync(el => el.Id == reservationId)
             ?? throw new ReservationNotFoundException(null);
         return reservation;
     }
 
-    public async Task<(List<Reservation>, int?, int)> GetReservations(FilterParamsDTO filterParams)
+    public async Task<(List<CreatedReservationListDTO>, int?, int)> GetReservations(
+        FilterParamsDTO filterParams
+    )
     {
         // try
         // {
@@ -124,13 +131,27 @@ public class ReservationRepository(AppDbContext context) : IReservationRepositor
                 query = query.Where(r => r.Id < cursorId);
             }
         }
-        List<Reservation> reservations = await query.Take(filterParams.Limit + 1).ToListAsync();
+        List<CreatedReservationListDTO> reservations = await query
+            .Include(r => r.User)
+            .Include(r => r.Room)
+            .Select(r => new CreatedReservationListDTO
+            {
+                ReservationId = r.Id,
+                Username = r.User.Username,
+                RoomNumber = r.Room.RoomNumber,
+                InDate = r.CheckInDate,
+                Guests = r.NumberOfGuests,
+                OutDate = r.CheckOutDate,
+            })
+            .Take(filterParams.Limit + 1)
+            .ToListAsync();
+        // List<Reservation> reservations = await query.Take(filterParams.Limit + 1).ToListAsync();
         bool hasMore = reservations.Count > filterParams.Limit;
         if (hasMore)
         {
             reservations.RemoveAt(reservations.Count - 1);
         }
-        int? nextLastId = hasMore ? reservations[^1].Id : null;
+        int? nextLastId = hasMore ? reservations[^1].ReservationId : null;
         return (reservations, nextLastId, totalCount);
     }
 
