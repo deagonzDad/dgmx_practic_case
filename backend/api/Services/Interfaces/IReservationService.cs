@@ -5,7 +5,7 @@ namespace api.Services.Interfaces;
 
 public interface IReservationService
 {
-    Task<ResponseDTO<CreatedReservationDTO?, ErrorDTO?>> CreateReservationAsync(
+    Task<ResponseDTO<CreatedReservationListDTO?, ErrorDTO?>> CreateReservationAsync(
         CreateReservationDTO reservation
     );
     Task<DataListPaginationDTO<CreatedReservationListDTO?, ErrorDTO?>> GetReservationsAsync(

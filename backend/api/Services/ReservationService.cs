@@ -41,11 +41,11 @@ public class ReservationService : IReservationService
         errorHandler.InitService("RESERVATION", "RESERVATION_ERROR");
     }
 
-    public async Task<ResponseDTO<CreatedReservationDTO?, ErrorDTO?>> CreateReservationAsync(
+    public async Task<ResponseDTO<CreatedReservationListDTO?, ErrorDTO?>> CreateReservationAsync(
         CreateReservationDTO reservation
     )
     {
-        ResponseDTO<CreatedReservationDTO?, ErrorDTO?> responseDTO = new()
+        ResponseDTO<CreatedReservationListDTO?, ErrorDTO?> responseDTO = new()
         {
             Success = false,
             Message = "",
@@ -61,22 +61,9 @@ public class ReservationService : IReservationService
             );
             Reservation reservationMdl = _mapper.Map<Reservation>(reservation);
             reservationMdl.Payment = paymentCreated;
-            reservationMdl.Payment.Reservation = reservationMdl;
-            User userAttach = new()
-            {
-                Id = reservation.ClientId,
-                Username = string.Empty,
-                Password = string.Empty,
-                Email = string.Empty,
-            };
-            Room roomAttach = new() { Id = reservation.RoomId };
-            _dbContext.Rooms.Attach(roomAttach);
-            _dbContext.Users.Attach(userAttach);
-            reservationMdl.User = userAttach;
-            reservationMdl.Room = roomAttach;
             await _reservationRepository.CreateReservationAsync(reservationMdl);
             await transaction.CommitAsync();
-            responseDTO.Data = _mapper.Map<CreatedReservationDTO>(reservationMdl);
+            responseDTO.Data = _mapper.Map<CreatedReservationListDTO>(reservationMdl);
             responseDTO.Message = "Success in the reservation creation";
             responseDTO.Success = true;
             return responseDTO;

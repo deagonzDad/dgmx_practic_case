@@ -18,13 +18,6 @@ public class ReservationRepository(AppDbContext context) : IReservationRepositor
     [
         nameof(Reservation.Id),
         nameof(Reservation.NumberOfGuests),
-        // nameof(Reservation.TotalPrice),
-        // nameof(Reservation.UserId),
-        // nameof(Reservation.RoomId),
-        // nameof(Reservation.PaymentId),
-        // nameof(Reservation.User),
-        // nameof(Reservation.Room),
-        // nameof(Reservation.Payment),
     ];
 
     public async Task CreateReservationAsync(Reservation reservation)
@@ -145,7 +138,6 @@ public class ReservationRepository(AppDbContext context) : IReservationRepositor
             })
             .Take(filterParams.Limit + 1)
             .ToListAsync();
-        // List<Reservation> reservations = await query.Take(filterParams.Limit + 1).ToListAsync();
         bool hasMore = reservations.Count > filterParams.Limit;
         if (hasMore)
         {
