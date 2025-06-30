@@ -69,13 +69,13 @@ public class UserRepository(AppDbContext context) : IUserRepository
             usersQuery = usersQuery.Where(data => data.IsActive == filterParamsDTO.IsActive);
             if (!string.IsNullOrEmpty(filterParamsDTO.Filter))
             {
-                string filterText = filterParamsDTO.Filter.ToLower();
+                string filterText = $"%{filterParamsDTO.Filter.ToLower()}%";
                 usersQuery = usersQuery.Where(data =>
-                    data.Id.ToString().Contains(filterText)
-                    || data.FirstName.ToLower().Contains(filterText)
-                    || data.LastName.ToLower().Contains(filterText)
-                    || data.Email.ToLower().Contains(filterText)
-                    || data.Username.ToLower().Contains(filterText)
+                    EF.Functions.Like(data.Id.ToString(), filterText)
+                    || EF.Functions.Like(data.FirstName.ToLower(), filterText)
+                    || EF.Functions.Like(data.LastName.ToLower(), filterText)
+                    || EF.Functions.Like(data.Email.ToLower(), filterText)
+                    || EF.Functions.Like(data.Username.ToLower(), filterText)
                 );
             }
             bool hasSortBy =
