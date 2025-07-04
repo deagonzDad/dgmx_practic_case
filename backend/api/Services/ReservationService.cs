@@ -110,8 +110,8 @@ public class ReservationService : IReservationService
             return _errorHandler.CreateErrorRes(
                 ex,
                 responseDTO,
-                "Room Not Found",
-                "Room not found in the database",
+                "Reservation Not Found",
+                "Reservation not found in the database",
                 StatusCodes.Status404NotFound,
                 _logger
             );

@@ -12,21 +12,15 @@ public class MyBaseController : ControllerBase
         where TData : IResponseData?
     {
         if (response.Success)
-        {
             return Ok(response);
-        }
         else if (response.Code == 400)
-        {
             return BadRequest(response);
-        }
         else if (response.Code == 401)
-        {
             return Unauthorized(response);
-        }
+        else if (response.Code == 404)
+            return NotFound(response);
         else
-        {
             return BadRequest(response);
-        }
     }
 
     public ActionResult<DataListPaginationDTO<TData, ErrorDTO?>> CreateListResponse<TData>(

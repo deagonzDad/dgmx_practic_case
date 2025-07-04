@@ -14,11 +14,11 @@ namespace api.Controllers
     [Authorize]
     public class RoomsController(
         IRoomService roomService,
-        ILogger<Room> logger,
+        ILogger<RoomsController> logger,
         IEncrypter encrypter
     ) : MyBaseController
     {
-        private readonly ILogger<Room> _logger = logger;
+        private readonly ILogger<RoomsController> _logger = logger;
         private readonly IRoomService _roomService = roomService;
         private readonly IEncrypter _encrypter = encrypter;
 

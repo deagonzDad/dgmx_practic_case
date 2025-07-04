@@ -15,11 +15,11 @@ namespace api.Controllers
     [Authorize]
     public class ReservationController(
         IReservationService reservationService,
-        ILogger<Reservation> logger,
+        ILogger<ReservationController> logger,
         IEncrypter encrypter
     ) : MyBaseController
     {
-        private readonly ILogger<Reservation> _logger = logger;
+        private readonly ILogger<ReservationController> _logger = logger;
         private readonly IReservationService _reservationService = reservationService;
         private readonly IEncrypter _encrypter = encrypter;
 
@@ -92,20 +92,20 @@ namespace api.Controllers
             }
         }
 
-        [HttpGet("/IdReservation")]
+        [HttpGet("{IdRes}")]
         public async Task<
             ActionResult<ResponseDTO<CreatedReservationDTO?, ErrorDTO?>>
-        > GetReservationById(int IdReservation)
+        > GetReservationById([FromRoute(Name = "IdRes")] int IdReservation)
         {
             try
             {
-                if (!ModelState.IsValid)
-                {
-                    return StatusCode(
-                        StatusCodes.Status500InternalServerError,
-                        new { res = ModelState }
-                    );
-                }
+                // if (!ModelState.IsValid)
+                // {
+                //     return StatusCode(
+                //         StatusCodes.Status500InternalServerError,
+                //         new { res = ModelState }
+                //     );
+                // }
                 ResponseDTO<CreatedReservationDTO?, ErrorDTO?> responseDTO =
                     await _reservationService.GetReservationByIdAsync(IdReservation);
                 return CreateResponse(responseDTO);
