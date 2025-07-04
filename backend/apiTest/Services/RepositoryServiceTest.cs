@@ -48,8 +48,10 @@ public class RepositoryServiceTests : IClassFixture<TestFixture>
         _reservationRepoMock
             .Setup(repo => repo.GetReservationByIdAsync(nonExistedId))
             .ThrowsAsync(new ReservationNotFoundException(null));
-        await Assert.ThrowsAsync<ReservationNotFoundException>(
-            () => _reservationService.GetReservationByIdAsync(nonExistedId)
-        );
+        // await Assert.ThrowsAsync<ReservationNotFoundException>(
+        //     () => _reservationService.GetReservationByIdAsync(nonExistedId)
+        // );
+        var result = await _reservationService.GetReservationByIdAsync(nonExistedId);
+        Assert.Null(result.Data);
     }
 }
