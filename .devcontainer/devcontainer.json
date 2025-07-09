@@ -6,6 +6,9 @@
   "context": "..",
 
   "workspaceFolder": "/app/backend",
+  "mounts": [
+    "source=${localWorkspaceFolder},target=/app,type=bind,consistency=cached"
+  ],
   "forwardPorts": [5000, 5001],
   "portsAttributes": {
     "5001": {

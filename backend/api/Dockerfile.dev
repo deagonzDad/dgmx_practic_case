@@ -3,6 +3,7 @@ FROM mcr.microsoft.com/dotnet/sdk:8.0 AS develop
 WORKDIR /app
 
 EXPOSE 5000
+EXPOSE 5001
 
 RUN apt-get update && apt-get install -y \
     curl \
