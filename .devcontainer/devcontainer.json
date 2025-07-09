@@ -1,0 +1,70 @@
+// For format details, see https://aka.ms/devcontainer.json. For config options, see the
+// README at: https://github.com/devcontainers/templates/tree/main/src/dotnet
+{
+  "name": "Docker Solution",
+  "dockerFile": "../backend/api/Dockerfile.dev",
+  "context": "..",
+
+  "workspaceFolder": "/app/backend",
+  "forwardPorts": [5000, 5001],
+  "portsAttributes": {
+    "5001": {
+      "protocol": "https"
+    }
+  },
+  "remoteEnv": {
+    "ASPNETCORE_URLS": "https://+:5001;http://+:5000"
+  },
+  "customizations": {
+    "vscode": {
+      "settings": {
+        "terminal.integrated.defaultProfile.linux": "bash"
+        // "omnisharp.enableAsyncCompletion": false,
+      },
+      "extensions": [
+        "ms-dotnettools.vscode-dotnet-runtime",
+        "csharpier.csharpier-vscode",
+        "cweijan.dbclient-jdbc",
+        "cweijan.vscode-redis-client",
+        "eamodio.gitlens",
+        "editorconfig.editorconfig",
+        "esbenp.prettier-vscode",
+        "google.geminicodeassist",
+        "jmrog.vscode-nuget-package-manager",
+        "kisstkondoros.vscode-gutter-preview",
+        "mhutchie.git-graph",
+        "miguelsolorio.fluent-icons",
+        "miguelsolorio.symbols",
+        "ms-azuretools.vscode-containers",
+        "ms-azuretools.vscode-docker",
+        "ms-dotnettools.csdevkit",
+        "ms-dotnettools.csharp",
+        "rapidapi.vscode-rapidapi-client",
+        "rapidapi.vscode-services",
+        "streetsidesoftware.code-spell-checker",
+        "usernamehw.errorlens",
+        "zhuangtongfa.material-theme"
+      ]
+    }
+  }
+
+  // Features to add to the dev container. More info: https://containers.dev/features.
+  // "features": {},
+
+  // Use 'forwardPorts' to make a list of ports inside the container available locally.
+  // "forwardPorts": [5000, 5001],
+  // "portsAttributes": {
+  //		"5001": {
+  //			"protocol": "https"
+  //		}
+  // }
+
+  // Use 'postCreateCommand' to run commands after the container is created.
+  // "postCreateCommand": "dotnet restore",
+
+  // Configure tool-specific properties.
+  // "customizations": {},
+
+  // Uncomment to connect as root instead. More info: https://aka.ms/dev-containers-non-root.
+  // "remoteUser": "root"
+}
