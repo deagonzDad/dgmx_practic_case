@@ -60,7 +60,7 @@ try
 
     var app = builder.Build();
 
-    app.Services.ConfigureDatabaseScope();
+    await app.Services.ConfigureDatabaseScopeAsync();
 
     // Configure the HTTP request pipeline.
     if (app.Environment.IsDevelopment())
@@ -71,12 +71,14 @@ try
 
     app.UseHttpsRedirection();
 
-    app.MapControllers();
     app.UseMiddleware<RequestLogContextMiddleware>();
     //add support to logging request with Serilog
     app.UseSerilogRequestLogging();
     app.UseAuthentication();
     app.UseAuthorization();
+
+    app.MapControllers();
+
     app.Run();
 }
 catch (HostAbortedException)
