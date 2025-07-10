@@ -20,9 +20,15 @@ RUN dotnet publish "api/api.csproj" -c Release -o /app/publish /p:UseAppHost=fal
 
 FROM mcr.microsoft.com/dotnet/aspnet:8.0 AS final
 
+RUN addgroup --system appgroup && adduser --system --ingroup appgroup appuser
+
 WORKDIR /app
 
 COPY --from=publish /app/publish .
+
+RUN chown -R appuser:appgroup /app
+
+USER appuser
 
 EXPOSE 80
 

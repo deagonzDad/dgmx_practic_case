@@ -1,15 +1,13 @@
-version: '3.8'
-
 services:
   api:
+    container_name: dgmx_practice
     build:
-      context: ./api
-      dockerfile: Dockerfile
+      context: .
+      dockerfile: api/Dockerfile.dev
+    user: "${UID}:${GID}"
     ports:
-      - "5000:80"
-      - "5001:443"
-    environment:
-      - ASPNETCORE_ENVIRONMENT=Development
-      - ASPNETCORE_URLS=https://+:443;http://+:80
+      - "5000:5000"
+      - "5001:5001"
     volumes:
-      - ~/.vsdbg:/remote_debugger:rw
+      - ./backend:/app/backend
+    restart: unless-stopped
