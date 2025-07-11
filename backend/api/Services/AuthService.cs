@@ -9,7 +9,6 @@ using api.Models;
 using api.Repository.Interfaces;
 using api.Services.Interfaces;
 using AutoMapper;
-using Microsoft.EntityFrameworkCore;
 
 namespace api.Services;
 
@@ -123,6 +122,18 @@ public class AuthService : IAuthService
                 "An error occurred while processing your request.",
                 "Database error in user creation",
                 StatusCodes.Status400BadRequest,
+                _logger
+            );
+        }
+        catch (AlreadyExistException ex)
+        {
+            await transaction.RollbackAsync();
+            return _errorHandler.CreateErrorRes(
+                ex,
+                responseDTO,
+                "Bad password or username",
+                "Something went wrong creating the user name",
+                StatusCodes.Status409Conflict,
                 _logger
             );
         }

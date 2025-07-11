@@ -26,12 +26,7 @@ namespace api.Controllers
             try
             {
                 if (!ModelState.IsValid)
-                {
-                    return StatusCode(
-                        StatusCodes.Status500InternalServerError,
-                        new { res = ModelState }
-                    );
-                }
+                    return BadRequest(ModelState);
                 ResponseDTO<UserCreatedDTO?, ErrorDTO?> responseDTO =
                     await _authService.SignupAsync(userDTO);
                 return CreateResponse(responseDTO);
@@ -57,12 +52,7 @@ namespace api.Controllers
             try
             {
                 if (!ModelState.IsValid)
-                {
-                    return StatusCode(
-                        StatusCodes.Status500InternalServerError,
-                        new { res = ModelState }
-                    );
-                }
+                    return BadRequest(ModelState);
                 ResponseDTO<JWTTokenResDTO?, ErrorDTO?> response = await _authService.LoginAsync(
                     login
                 );

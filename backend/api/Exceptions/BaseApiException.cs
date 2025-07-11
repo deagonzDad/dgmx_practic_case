@@ -35,3 +35,21 @@ public class UpdateException : BaseApiException
         LogError = logError;
     }
 }
+
+public class AlreadyExistException : BaseApiException
+{
+    private new const int ErrorCode = 400;
+    private new const string Message = "The element already exist";
+
+    public AlreadyExistException(Exception logError)
+        : base(Message, ErrorCode)
+    {
+        LogError = logError;
+    }
+
+    public AlreadyExistException(Exception? logError, string message)
+        : base(message, ErrorCode)
+    {
+        LogError = logError;
+    }
+}

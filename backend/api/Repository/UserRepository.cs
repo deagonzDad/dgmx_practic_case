@@ -4,6 +4,7 @@ using api.DTO.ResponseDTO;
 using api.Exceptions;
 using api.Models;
 using api.Repository.Interfaces;
+using Microsoft.Data.Sqlite;
 using Microsoft.EntityFrameworkCore;
 
 namespace api.Repository;
@@ -57,6 +58,9 @@ public class UserRepository(AppDbContext context) : IUserRepository
         }
         catch (DbUpdateException ex)
         {
+            var innerException = ex.InnerException;
+            if (innerException is SqliteException sqliteEx && sqliteEx.SqliteErrorCode == 19)
+                throw new AlreadyExistException(ex);
             throw new UpdateException(ex);
         }
     }
