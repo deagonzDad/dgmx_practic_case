@@ -18,6 +18,7 @@
   "remoteEnv": {
     "ASPNETCORE_URLS": "https://+:5001;http://+:5000"
   },
+  "postCreateCommand": "dotnet tool restore",
   "customizations": {
     "vscode": {
       "settings": {
