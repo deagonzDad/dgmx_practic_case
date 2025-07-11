@@ -55,7 +55,7 @@ public class ReservationsControllerTests : IClassFixture<TestFixture>
         var actionResult = await _sut.GetReservationById(reservationId);
 
         var okResult = Assert.IsType<OkObjectResult>(actionResult.Result);
-        Assert.Equal(200, okResult.StatusCode);
+        Assert.Equal(StatusCodes.Status200OK, okResult.StatusCode);
         Assert.Equal(serviceResponse, okResult.Value);
     }
 
@@ -78,5 +78,103 @@ public class ReservationsControllerTests : IClassFixture<TestFixture>
 
         var notFoundResult = Assert.IsType<NotFoundObjectResult>(actionResult.Result);
         Assert.Equal(404, notFoundResult.StatusCode);
+    }
+
+    [Fact]
+    public async Task CreateReservation_WithValidModel_ReturnsOkResult()
+    {
+        // Arrange
+        var createDto = _fixture.Create<CreateReservationDTO>();
+        var createdDto = _fixture.Create<CreatedReservationListDTO>();
+        var responseDto = new ResponseDTO<CreatedReservationListDTO?, ErrorDTO?>
+        {
+            Data = createdDto,
+            Success = true,
+            Message = _fixture.Create<string>(),
+        };
+
+        _reservationServiceMock
+            .Setup(s => s.CreateReservationAsync(createDto))
+            .ReturnsAsync(responseDto);
+
+        // Act
+        var actionResult = await _sut.CreateReservation(createDto);
+
+        // Assert
+        var okResult = Assert.IsType<OkObjectResult>(actionResult.Result);
+        Assert.Equal(StatusCodes.Status200OK, okResult.StatusCode);
+        Assert.Equal(responseDto, okResult.Value);
+        _reservationServiceMock.Verify(s => s.CreateReservationAsync(createDto), Times.Once);
+    }
+
+    [Fact]
+    public async Task CreateReservation_WithInvalidModel_ReturnsInternalServerError()
+    {
+        // Arrange
+        var createDto = _fixture.Create<CreateReservationDTO>();
+        _sut.ModelState.AddModelError("Error", "Sample model error");
+
+        // Act
+        var actionResult = await _sut.CreateReservation(createDto);
+
+        // Assert
+        var statusCodeResult = Assert.IsType<ObjectResult>(actionResult.Result);
+        Assert.Equal(StatusCodes.Status500InternalServerError, statusCodeResult.StatusCode);
+        _reservationServiceMock.Verify(
+            s => s.CreateReservationAsync(It.IsAny<CreateReservationDTO>()),
+            Times.Never
+        );
+    }
+
+    [Fact]
+    public async Task GetReservations_WhenCalled_ReturnsOkObjectResultWithPaginatedData()
+    {
+        // Arrange
+        var filterParams = _fixture.Create<FilterParamsDTO>();
+        var token = _fixture.Create<string>();
+        var decryptedCursor = _fixture.Create<string>();
+
+        var reservations = _fixture.CreateMany<CreatedReservationListDTO>(5).ToList();
+        var serviceResponse = new DataListPaginationDTO<CreatedReservationListDTO?, ErrorDTO?>
+        {
+            Data = reservations!,
+            TotalRecords = reservations.Count,
+            Next = "next_cursor",
+            Previous = "prev_cursor",
+        };
+
+        var encryptedNext = _fixture.Create<string>();
+        var encryptedPrev = _fixture.Create<string>();
+
+        _encrypterMock.Setup(e => e.DecryptString(token)).Returns(decryptedCursor);
+        _reservationServiceMock
+            .Setup(s =>
+                s.GetReservationsAsync(It.Is<FilterParamsDTO>(f => f.Cursor == decryptedCursor))
+            )
+            .ReturnsAsync(serviceResponse);
+        _encrypterMock.Setup(e => e.EncryptString("next_cursor")).Returns(encryptedNext);
+        _encrypterMock.Setup(e => e.EncryptString("prev_cursor")).Returns(encryptedPrev);
+
+        // Act
+        var actionResult = await _sut.GetReservations(filterParams, token);
+
+        // Assert
+        var okResult = Assert.IsType<OkObjectResult>(actionResult.Result);
+        Assert.Equal(StatusCodes.Status200OK, okResult.StatusCode);
+
+        var resultValue = Assert.IsType<
+            DataListPaginationDTO<CreatedReservationListDTO?, ErrorDTO?>
+        >(okResult.Value);
+        Assert.Equal(reservations.Count, resultValue.Data.Count);
+        Assert.Equal(encryptedNext, resultValue.Next);
+        Assert.Equal(encryptedPrev, resultValue.Previous);
+
+        _reservationServiceMock.Verify(
+            s => s.GetReservationsAsync(It.IsAny<FilterParamsDTO>()),
+            Times.Once
+        );
+        _encrypterMock.Verify(e => e.DecryptString(token), Times.Once);
+        _encrypterMock.Verify(e => e.EncryptString("next_cursor"), Times.Once);
+        _encrypterMock.Verify(e => e.EncryptString("prev_cursor"), Times.Once);
     }
 }
