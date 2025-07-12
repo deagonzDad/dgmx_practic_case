@@ -26,7 +26,12 @@ public class UpdateRoomDTO : BaseRoomDTO
     public new int? Number { get; set; }
     public new RoomType Type { get; set; } = RoomType.Single;
 
-    [Range(0, double.MaxValue, ErrorMessage = "The value must be 0 or positive")]
+    [Range(
+        typeof(decimal),
+        "0",
+        "79228162514264337593543950335",
+        ErrorMessage = "The value must be 0 or positive"
+    )]
     public new decimal? PricePerNight { get; set; }
 
     [Required]

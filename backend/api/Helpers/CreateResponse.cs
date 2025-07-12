@@ -19,6 +19,8 @@ public class MyBaseController : ControllerBase
             return Unauthorized(response);
         else if (response.Code == 404)
             return NotFound(response);
+        else if (response.Code == 409)
+            return Conflict(response);
         else
             return BadRequest(response);
     }
