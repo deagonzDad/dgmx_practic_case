@@ -45,7 +45,7 @@ public class UserControllerTests : IClassFixture<TestFixture>
         var users = _fixture.CreateMany<UserCreatedDTO>(5).ToList();
         var serviceResponse = new DataListPaginationDTO<UserCreatedDTO?, ErrorDTO?>
         {
-            Data = users,
+            Data = users!,
             TotalRecords = users.Count,
             Next = "next_cursor",
             Previous = "prev_cursor",
