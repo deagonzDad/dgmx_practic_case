@@ -23,13 +23,13 @@ public class UpdateException : BaseApiException
     private new const int ErrorCode = 400;
     private new const string Message = "Something went wrong with the update";
 
-    public UpdateException(Exception logError)
+    public UpdateException(Exception? logError)
         : base(Message, ErrorCode)
     {
         LogError = logError;
     }
 
-    public UpdateException(Exception logError, string message)
+    public UpdateException(Exception? logError, string message)
         : base(message, ErrorCode)
     {
         LogError = logError;
@@ -41,7 +41,7 @@ public class AlreadyExistException : BaseApiException
     private new const int ErrorCode = 400;
     private new const string Message = "The element already exist";
 
-    public AlreadyExistException(Exception logError)
+    public AlreadyExistException(Exception? logError)
         : base(Message, ErrorCode)
     {
         LogError = logError;
