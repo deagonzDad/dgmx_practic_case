@@ -1,5 +1,3 @@
-using System;
-
 namespace api.Common;
 
 public static class AppRoles

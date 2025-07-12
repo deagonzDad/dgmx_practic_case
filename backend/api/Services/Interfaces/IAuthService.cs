@@ -1,8 +1,6 @@
-using api.DTO.Interfaces;
 using api.DTO.ResponseDTO;
-using api.DTO.SetttingsDTO;
+using api.DTO.SettingsDTO;
 using api.DTO.UsersDTO;
-using api.Models;
 
 namespace api.Services.Interfaces;
 

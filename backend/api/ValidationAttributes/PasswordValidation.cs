@@ -1,13 +1,12 @@
 using System.ComponentModel.DataAnnotations;
-using System.Text.RegularExpressions;
-using api.ValidationAttributes.Interfaces;
+using api.Helpers.Instances;
 
 namespace api.ValidationAttributes;
 
 [AttributeUsage(AttributeTargets.Property | AttributeTargets.Field, AllowMultiple = false)]
 public sealed class CustomPasswordValidation : ValidationAttribute
 {
-    private const int MinimumLenght = 8;
+    private const int MinimumLength = 8;
 
     protected override ValidationResult? IsValid(object? value, ValidationContext validationContext)
     {
@@ -18,8 +17,8 @@ public sealed class CustomPasswordValidation : ValidationAttribute
         {
             return new ValidationResult(ErrorMessage = "Password is required");
         }
-        string password = value?.ToString() ?? "";
-        if (password.Length < MinimumLenght)
+        string password = value.ToString() ?? "";
+        if (password.Length < MinimumLength)
         {
             return new ValidationResult(
                 ErrorMessage = "Password must be at least 8 characters long"

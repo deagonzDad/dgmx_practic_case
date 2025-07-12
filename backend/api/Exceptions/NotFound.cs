@@ -1,17 +1,21 @@
-using System;
-
 namespace api.Exceptions;
 
 public class UserNotFoundException : BaseApiException
 {
     private const int NotFoundCode = 404;
-    private const string DefaultMessage = "User not found.";
+    private const string DefaultMessage = "User not found";
 
-    public UserNotFoundException()
-        : base(DefaultMessage, NotFoundCode) { }
+    public UserNotFoundException(Exception? logError)
+        : base(DefaultMessage, NotFoundCode)
+    {
+        LogError = logError;
+    }
 
-    public UserNotFoundException(string message)
-        : base(message, NotFoundCode) { }
+    public UserNotFoundException(Exception logError, string message)
+        : base(message, NotFoundCode)
+    {
+        LogError = logError;
+    }
 }
 
 public class RoomNotFoundException : BaseApiException
@@ -19,11 +23,17 @@ public class RoomNotFoundException : BaseApiException
     private const string DefaultMessage = "Room not found";
     private const int NotFoundCode = 404;
 
-    public RoomNotFoundException()
-        : base(DefaultMessage, NotFoundCode) { }
+    public RoomNotFoundException(Exception? logError)
+        : base(DefaultMessage, NotFoundCode)
+    {
+        LogError = logError;
+    }
 
-    public RoomNotFoundException(string message)
-        : base(message, NotFoundCode) { }
+    public RoomNotFoundException(Exception logError, string message)
+        : base(message, NotFoundCode)
+    {
+        LogError = logError;
+    }
 }
 
 public class ReservationNotFoundException : BaseApiException
@@ -31,11 +41,17 @@ public class ReservationNotFoundException : BaseApiException
     private const string DefaultMessage = "Reserve not found";
     private const int NotFoundCode = 404;
 
-    public ReservationNotFoundException()
-        : base(DefaultMessage, NotFoundCode) { }
+    public ReservationNotFoundException(Exception? logError)
+        : base(DefaultMessage, NotFoundCode)
+    {
+        LogError = logError;
+    }
 
-    public ReservationNotFoundException(string message)
-        : base(message, NotFoundCode) { }
+    public ReservationNotFoundException(Exception? logError, string message)
+        : base(message, NotFoundCode)
+    {
+        LogError = logError;
+    }
 }
 
 public class RoleNotFoundException : BaseApiException
@@ -43,9 +59,33 @@ public class RoleNotFoundException : BaseApiException
     private const string DefaultMessage = "Role not found";
     private const int NotFoundCode = 404;
 
-    public RoleNotFoundException()
-        : base(DefaultMessage, NotFoundCode) { }
+    public RoleNotFoundException(Exception? logError)
+        : base(DefaultMessage, NotFoundCode)
+    {
+        LogError = logError;
+    }
 
-    public RoleNotFoundException(string message)
-        : base(message, NotFoundCode) { }
+    public RoleNotFoundException(Exception? logError, string message)
+        : base(message, NotFoundCode)
+    {
+        LogError = logError;
+    }
+}
+
+public class PaymentNotFoundException : BaseApiException
+{
+    private const string DefaultMessage = "Payment not found";
+    private const int NotFoundCode = 404;
+
+    public PaymentNotFoundException(Exception? logError)
+        : base(DefaultMessage, NotFoundCode)
+    {
+        LogError = logError;
+    }
+
+    public PaymentNotFoundException(Exception? logError, string message)
+        : base(message, NotFoundCode)
+    {
+        LogError = logError;
+    }
 }

@@ -1,11 +1,11 @@
 using api.Infrastructure;
-using api.Infrastructure.DependecyInjection;
+using api.Infrastructure.DependencyInjection;
 using Microsoft.OpenApi.Models;
 using Serilog;
 using Serilog.Events;
 
 Log.Logger = new LoggerConfiguration()
-    .MinimumLevel.Override("Microsft", LogEventLevel.Information)
+    .MinimumLevel.Override("Microsoft", LogEventLevel.Information)
     .Enrich.FromLogContext()
     .WriteTo.Console()
     .CreateBootstrapLogger();
@@ -36,7 +36,7 @@ try
             Name = "JWT Authentication",
             Description = "Enter your JWT Token here",
             In = ParameterLocation.Header,
-            Type = SecuritySchemeType.ApiKey,
+            Type = SecuritySchemeType.Http,
             Scheme = "bearer",
             BearerFormat = "JWT",
         };
@@ -60,7 +60,7 @@ try
 
     var app = builder.Build();
 
-    app.Services.ConfigureDatabaseScope();
+    await app.Services.ConfigureDatabaseScopeAsync();
 
     // Configure the HTTP request pipeline.
     if (app.Environment.IsDevelopment())
@@ -71,12 +71,14 @@ try
 
     app.UseHttpsRedirection();
 
-    app.MapControllers();
     app.UseMiddleware<RequestLogContextMiddleware>();
     //add support to logging request with Serilog
     app.UseSerilogRequestLogging();
     app.UseAuthentication();
     app.UseAuthorization();
+
+    app.MapControllers();
+
     app.Run();
 }
 catch (HostAbortedException)

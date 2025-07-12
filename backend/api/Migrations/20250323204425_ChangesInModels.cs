@@ -10,72 +10,53 @@ namespace api.Migrations
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
         {
-            migrationBuilder.DropForeignKey(
-                name: "FK_UserRoles_Roles_RolesId",
-                table: "UserRoles");
+            migrationBuilder.DropForeignKey(name: "FK_UserRoles_Roles_RolesId", table: "UserRoles");
 
-            migrationBuilder.DropForeignKey(
-                name: "FK_UserRoles_Users_UsersId",
-                table: "UserRoles");
+            migrationBuilder.DropForeignKey(name: "FK_UserRoles_Users_UsersId", table: "UserRoles");
 
-            migrationBuilder.DropIndex(
-                name: "IX_Users_Id",
-                table: "Users");
+            migrationBuilder.DropIndex(name: "IX_Users_Id", table: "Users");
 
-            migrationBuilder.DropIndex(
-                name: "IX_UserRoles_UsersId",
-                table: "UserRoles");
+            migrationBuilder.DropIndex(name: "IX_UserRoles_UsersId", table: "UserRoles");
 
-            migrationBuilder.DropIndex(
-                name: "IX_Rooms_Id",
-                table: "Rooms");
+            migrationBuilder.DropIndex(name: "IX_Rooms_Id", table: "Rooms");
 
-            migrationBuilder.DropIndex(
-                name: "IX_Reservations_Id",
-                table: "Reservations");
+            migrationBuilder.DropIndex(name: "IX_Reservations_Id", table: "Reservations");
 
-            migrationBuilder.DropIndex(
-                name: "IX_Payments_Id",
-                table: "Payments");
+            migrationBuilder.DropIndex(name: "IX_Payments_Id", table: "Payments");
 
-            migrationBuilder.DeleteData(
-                table: "Roles",
-                keyColumn: "Id",
-                keyValue: 1);
+            migrationBuilder.DeleteData(table: "Roles", keyColumn: "Id", keyValue: 1);
 
-            migrationBuilder.RenameColumn(
-                name: "UsersId",
-                table: "UserRoles",
-                newName: "UserId");
+            migrationBuilder.RenameColumn(name: "UsersId", table: "UserRoles", newName: "UserId");
 
-            migrationBuilder.RenameColumn(
-                name: "RolesId",
-                table: "UserRoles",
-                newName: "RoleId");
+            migrationBuilder.RenameColumn(name: "RolesId", table: "UserRoles", newName: "RoleId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_Users_Email",
                 table: "Users",
                 column: "Email",
-                unique: true);
+                unique: true
+            );
 
             migrationBuilder.CreateIndex(
                 name: "IX_Users_Username",
                 table: "Users",
                 column: "Username",
-                unique: true);
+                unique: true
+            );
 
             migrationBuilder.CreateIndex(
                 name: "IX_UserRoles_UserId_RoleId",
                 table: "UserRoles",
                 columns: new[] { "UserId", "RoleId" },
-                unique: true);
+                unique: true
+            );
 
             migrationBuilder.CreateIndex(
                 name: "IX_Roles_Name",
                 table: "Roles",
                 column: "Name",
-                unique: true);
+                unique: true
+            );
 
             migrationBuilder.AddForeignKey(
                 name: "FK_UserRoles_Roles_RoleId",
@@ -83,7 +64,8 @@ namespace api.Migrations
                 column: "RoleId",
                 principalTable: "Roles",
                 principalColumn: "Id",
-                onDelete: ReferentialAction.Cascade);
+                onDelete: ReferentialAction.Cascade
+            );
 
             migrationBuilder.AddForeignKey(
                 name: "FK_UserRoles_Users_UserId",
@@ -91,79 +73,68 @@ namespace api.Migrations
                 column: "UserId",
                 principalTable: "Users",
                 principalColumn: "Id",
-                onDelete: ReferentialAction.Cascade);
+                onDelete: ReferentialAction.Cascade
+            );
         }
 
         /// <inheritdoc />
         protected override void Down(MigrationBuilder migrationBuilder)
         {
-            migrationBuilder.DropForeignKey(
-                name: "FK_UserRoles_Roles_RoleId",
-                table: "UserRoles");
+            migrationBuilder.DropForeignKey(name: "FK_UserRoles_Roles_RoleId", table: "UserRoles");
 
-            migrationBuilder.DropForeignKey(
-                name: "FK_UserRoles_Users_UserId",
-                table: "UserRoles");
+            migrationBuilder.DropForeignKey(name: "FK_UserRoles_Users_UserId", table: "UserRoles");
 
-            migrationBuilder.DropIndex(
-                name: "IX_Users_Email",
-                table: "Users");
+            migrationBuilder.DropIndex(name: "IX_Users_Email", table: "Users");
 
-            migrationBuilder.DropIndex(
-                name: "IX_Users_Username",
-                table: "Users");
+            migrationBuilder.DropIndex(name: "IX_Users_Username", table: "Users");
 
-            migrationBuilder.DropIndex(
-                name: "IX_UserRoles_UserId_RoleId",
-                table: "UserRoles");
+            migrationBuilder.DropIndex(name: "IX_UserRoles_UserId_RoleId", table: "UserRoles");
 
-            migrationBuilder.DropIndex(
-                name: "IX_Roles_Name",
-                table: "Roles");
+            migrationBuilder.DropIndex(name: "IX_Roles_Name", table: "Roles");
 
-            migrationBuilder.RenameColumn(
-                name: "UserId",
-                table: "UserRoles",
-                newName: "UsersId");
+            migrationBuilder.RenameColumn(name: "UserId", table: "UserRoles", newName: "UsersId");
 
-            migrationBuilder.RenameColumn(
-                name: "RoleId",
-                table: "UserRoles",
-                newName: "RolesId");
+            migrationBuilder.RenameColumn(name: "RoleId", table: "UserRoles", newName: "RolesId");
 
             migrationBuilder.InsertData(
                 table: "Roles",
                 columns: new[] { "Id", "Name" },
-                values: new object[] { 1, "Admin" });
+                values: new object[] { 1, "Admin" }
+            );
 
             migrationBuilder.CreateIndex(
                 name: "IX_Users_Id",
                 table: "Users",
                 column: "Id",
-                unique: true);
+                unique: true
+            );
 
             migrationBuilder.CreateIndex(
                 name: "IX_UserRoles_UsersId",
                 table: "UserRoles",
-                column: "UsersId");
+                column: "UsersId"
+            );
 
             migrationBuilder.CreateIndex(
                 name: "IX_Rooms_Id",
                 table: "Rooms",
                 column: "Id",
-                unique: true);
+                unique: true
+            );
 
             migrationBuilder.CreateIndex(
                 name: "IX_Reservations_Id",
                 table: "Reservations",
                 column: "Id",
-                unique: true);
+                unique: true
+            );
 
             migrationBuilder.CreateIndex(
                 name: "IX_Payments_Id",
                 table: "Payments",
                 column: "Id",
-                unique: true);
+                unique: true
+            );
 
             migrationBuilder.AddForeignKey(
                 name: "FK_UserRoles_Roles_RolesId",
@@ -171,7 +142,8 @@ namespace api.Migrations
                 column: "RolesId",
                 principalTable: "Roles",
                 principalColumn: "Id",
-                onDelete: ReferentialAction.Cascade);
+                onDelete: ReferentialAction.Cascade
+            );
 
             migrationBuilder.AddForeignKey(
                 name: "FK_UserRoles_Users_UsersId",
@@ -179,7 +151,8 @@ namespace api.Migrations
                 column: "UsersId",
                 principalTable: "Users",
                 principalColumn: "Id",
-                onDelete: ReferentialAction.Cascade);
+                onDelete: ReferentialAction.Cascade
+            );
         }
     }
 }

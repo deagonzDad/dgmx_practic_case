@@ -1,8 +1,6 @@
-using System;
 using api.Data;
-using api.DTO.Interfaces;
 using api.DTO.ResponseDTO;
-using api.DTO.SetttingsDTO;
+using api.DTO.SettingsDTO;
 using api.DTO.UsersDTO;
 using api.Exceptions;
 using api.Helpers;
@@ -11,7 +9,6 @@ using api.Models;
 using api.Repository.Interfaces;
 using api.Services.Interfaces;
 using AutoMapper;
-using Microsoft.EntityFrameworkCore;
 
 namespace api.Services;
 
@@ -57,10 +54,12 @@ public class AuthService : IAuthService
         };
         try
         {
-            User user = await _userRepository.GetUserByUsernameAsync(userDTO.Username);
+            string userEmail =
+                userDTO.Email ?? userDTO.Username ?? throw new UserNotFoundException(null);
+            User user = await _userRepository.GetUserByEmailOrUsernameAsync(userEmail);
             if (!_hasher.VerifyPassword(userDTO.Password, user.Password))
             {
-                throw new UnauthorizedActionException();
+                throw new UnauthorizedActionException(null);
             }
             JWTTokenResDTO tokenDTO = _jwtGenerator.GenerateToken(user);
             responseDTO.Data = tokenDTO;
@@ -75,7 +74,7 @@ public class AuthService : IAuthService
                 responseDTO,
                 "Invalid username or password.",
                 "User not found in the database",
-                401,
+                StatusCodes.Status400BadRequest,
                 _logger
             );
         }
@@ -86,7 +85,7 @@ public class AuthService : IAuthService
                 responseDTO,
                 "Invalid username or password.",
                 "Password does not match the username",
-                401,
+                StatusCodes.Status400BadRequest,
                 _logger
             );
         }
@@ -104,15 +103,9 @@ public class AuthService : IAuthService
         {
             userDTO.Password = _hasher.HashPassword(userDTO.Password);
             User user = _mapper.Map<User>(userDTO);
-            (bool roleExist, List<Role> roles) = await _roleRepository.ValidateRolesExistByIdAsync(
-                userDTO.Roles
-            );
-            if (!roleExist)
-            {
-                throw new RoleNotFoundException();
-            }
+            List<Role> roles = await _roleRepository.GetRolesByIdAsync(userDTO.Roles);
+            user.Roles = roles;
             await _userRepository.CreateUserAsync(user);
-            await _roleRepository.AssignRoleToUserAsync(user, roles, true);
             await transaction.CommitAsync();
             responseDTO.Data = _mapper.Map<UserCreatedDTO>(user);
             responseDTO.Message = "Success in the user creation";
@@ -120,7 +113,7 @@ public class AuthService : IAuthService
             responseDTO.Code = 201;
             return responseDTO;
         }
-        catch (DbUpdateException ex)
+        catch (UpdateException ex)
         {
             await transaction.RollbackAsync();
             return _errorHandler.CreateErrorRes(
@@ -128,7 +121,19 @@ public class AuthService : IAuthService
                 responseDTO,
                 "An error occurred while processing your request.",
                 "Database error in user creation",
-                400,
+                StatusCodes.Status400BadRequest,
+                _logger
+            );
+        }
+        catch (AlreadyExistException ex)
+        {
+            await transaction.RollbackAsync();
+            return _errorHandler.CreateErrorRes(
+                ex,
+                responseDTO,
+                "Bad password or username",
+                "Something went wrong creating the user name",
+                StatusCodes.Status409Conflict,
                 _logger
             );
         }
@@ -140,22 +145,22 @@ public class AuthService : IAuthService
                 responseDTO,
                 "Role not found.",
                 "Role not found in the database",
-                400,
+                StatusCodes.Status400BadRequest,
                 _logger
             );
         }
-        catch (Exception ex)
-        {
-            await transaction.RollbackAsync();
-            return _errorHandler.CreateErrorRes(
-                ex,
-                responseDTO,
-                "something went wrong in the request",
-                "An error occurred while processing your request.",
-                500,
-                _logger
-            );
-        }
+        // catch (Exception ex)
+        // {
+        //     await transaction.RollbackAsync();
+        //     return _errorHandler.CreateErrorRes(
+        //         ex,
+        //         responseDTO,
+        //         "something went wrong in the request",
+        //         "An error occurred while processing your request.",
+        //         StatusCodes.Status500InternalServerError,
+        //         _logger
+        //     );
+        // }
         finally
         {
             await transaction.DisposeAsync();

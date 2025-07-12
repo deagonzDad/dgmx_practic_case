@@ -23,7 +23,7 @@ namespace api.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("INTEGER");
 
-                    b.Property<decimal>("Amount")
+                    b.Property<decimal>("AmountPerNight")
                         .HasColumnType("TEXT");
 
                     b.Property<DateTime>("PaymentDate")
@@ -32,8 +32,14 @@ namespace api.Migrations
                     b.Property<int>("PaymentMethod")
                         .HasColumnType("INTEGER");
 
+                    b.Property<int>("PaymentStatus")
+                        .HasColumnType("INTEGER");
+
                     b.Property<int>("ReservationId")
                         .HasColumnType("INTEGER");
+
+                    b.Property<decimal?>("TotalAmount")
+                        .HasColumnType("TEXT");
 
                     b.HasKey("Id");
 
@@ -52,17 +58,17 @@ namespace api.Migrations
                     b.Property<DateTime>("CheckInDate")
                         .HasColumnType("TEXT");
 
-                    b.Property<DateTime>("CheckOutDate")
+                    b.Property<DateTime?>("CheckOutDate")
                         .HasColumnType("TEXT");
 
                     b.Property<int>("NumberOfGuests")
                         .HasColumnType("INTEGER");
 
-                    b.Property<int>("RoomId")
+                    b.Property<int>("PaymentId")
                         .HasColumnType("INTEGER");
 
-                    b.Property<decimal>("TotalPrice")
-                        .HasColumnType("TEXT");
+                    b.Property<int>("RoomId")
+                        .HasColumnType("INTEGER");
 
                     b.Property<int>("UserId")
                         .HasColumnType("INTEGER");
@@ -137,6 +143,9 @@ namespace api.Migrations
                         .IsRequired()
                         .HasMaxLength(100)
                         .HasColumnType("TEXT");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("INTEGER");
 
                     b.Property<string>("LastName")
                         .IsRequired()
@@ -231,7 +240,8 @@ namespace api.Migrations
 
             modelBuilder.Entity("api.Models.Reservation", b =>
                 {
-                    b.Navigation("Payment");
+                    b.Navigation("Payment")
+                        .IsRequired();
                 });
 
             modelBuilder.Entity("api.Models.Role", b =>

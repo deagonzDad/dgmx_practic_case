@@ -15,26 +15,24 @@ namespace api.Migrations
                 table: "Rooms",
                 type: "INTEGER",
                 nullable: false,
-                defaultValue: false);
+                defaultValue: false
+            );
 
             migrationBuilder.AddColumn<bool>(
                 name: "IsAvailable",
                 table: "Rooms",
                 type: "INTEGER",
                 nullable: false,
-                defaultValue: false);
+                defaultValue: false
+            );
         }
 
         /// <inheritdoc />
         protected override void Down(MigrationBuilder migrationBuilder)
         {
-            migrationBuilder.DropColumn(
-                name: "IsActive",
-                table: "Rooms");
+            migrationBuilder.DropColumn(name: "IsActive", table: "Rooms");
 
-            migrationBuilder.DropColumn(
-                name: "IsAvailable",
-                table: "Rooms");
+            migrationBuilder.DropColumn(name: "IsAvailable", table: "Rooms");
         }
     }
 }

@@ -13,8 +13,8 @@ public class Role : IEquatable<Role>
 
     [Required]
     public required string Name { get; set; }
-    public virtual ICollection<User> Users { get; set; } = [];
-    public virtual ICollection<UserRole> UserRoles { get; set; } = [];
+    public ICollection<User> Users { get; set; } = [];
+    public ICollection<UserRole> UserRoles { get; set; } = [];
 
     public bool Equals(Role? other)
     {

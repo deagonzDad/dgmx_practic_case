@@ -1,6 +1,5 @@
-using System.Threading.Tasks;
 using api.DTO.ResponseDTO;
-using api.DTO.SetttingsDTO;
+using api.DTO.SettingsDTO;
 using api.DTO.UsersDTO;
 using api.Helpers;
 using api.Services.Interfaces;
@@ -11,17 +10,9 @@ namespace api.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    public class AuthController(
-        // IConfiguration config,
-        // AppDbContext dbContext,
-        // JwtTokenGenerator jwtTokenGenerator,
-        IAuthService authService,
-        ILogger<AuthController> logger
-    ) : MyBaseController
+    public class AuthController(IAuthService authService, ILogger<AuthController> logger)
+        : MyBaseController
     {
-        // private readonly IConfiguration _config = config;
-        // private readonly AppDbContext _dbContext = dbContext;
-        // private readonly JwtTokenGenerator _jwtTokenGenerator = jwtTokenGenerator;
         private readonly IAuthService _authService = authService;
         private readonly ILogger<AuthController> _logger = logger;
 
@@ -32,16 +23,10 @@ namespace api.Controllers
             [FromBody] UserCreateDTO userDTO
         )
         {
-            //this code is incomplete for the result
             try
             {
                 if (!ModelState.IsValid)
-                {
-                    return StatusCode(
-                        StatusCodes.Status500InternalServerError,
-                        new { res = ModelState }
-                    );
-                }
+                    return BadRequest(ModelState);
                 ResponseDTO<UserCreatedDTO?, ErrorDTO?> responseDTO =
                     await _authService.SignupAsync(userDTO);
                 return CreateResponse(responseDTO);
@@ -67,12 +52,7 @@ namespace api.Controllers
             try
             {
                 if (!ModelState.IsValid)
-                {
-                    return StatusCode(
-                        StatusCodes.Status500InternalServerError,
-                        new { res = ModelState }
-                    );
-                }
+                    return BadRequest(ModelState);
                 ResponseDTO<JWTTokenResDTO?, ErrorDTO?> response = await _authService.LoginAsync(
                     login
                 );

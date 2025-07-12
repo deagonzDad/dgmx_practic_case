@@ -1,5 +1,5 @@
 using System;
-using api.DTO.SetttingsDTO;
+using api.DTO.SettingsDTO;
 using api.Models;
 
 namespace api.Helpers.Instances;

@@ -1,5 +1,6 @@
-using System;
+using System.Linq.Expressions;
 using api.Data;
+using api.DTO.ResponseDTO;
 using api.Exceptions;
 using api.Models;
 using api.Repository.Interfaces;
@@ -9,37 +10,59 @@ namespace api.Repository;
 
 public class RoomRepository(AppDbContext context) : IRoomRepository
 {
+    private readonly string _defaultSortBy = nameof(Room.RoomNumber);
     private readonly AppDbContext _context = context;
+    private readonly HashSet<string> _allowedSortByProperties =
+    [
+        nameof(Room.RoomNumber),
+        nameof(Room.Id),
+    ];
 
-    public async Task CreateRoomAsync(Room room)
+    public async Task<decimal> GetPriceByIdAsync(int Id)
     {
-        Room? existedRoom = await _context.Rooms.FirstOrDefaultAsync(el =>
-            el.RoomNumber == room.RoomNumber
-        );
-        if (existedRoom != null)
+        try
         {
-            SetRoomActivation(existedRoom, false);
+            decimal? price = await _context
+                .Rooms.Where(ro => ro.Id == Id)
+                .Select(r => (decimal?)r.PricePerNight)
+                .FirstOrDefaultAsync();
+            if (!price.HasValue)
+            {
+                throw new RoomNotFoundException(null);
+            }
+            return (decimal)price;
         }
-        else
+        catch (DbUpdateException ex)
         {
-            await CreateNewRoomAsync(room);
+            throw new UpdateException(ex);
         }
-        await _context.SaveChangesAsync();
     }
 
-    private static void SetRoomActivation(Room existedRoom, bool deactivate)
+    public async Task<(bool, Room)> CreateRoomAsync(Room room)
     {
-        existedRoom.IsActive = !deactivate;
-    }
-
-    private async Task CreateNewRoomAsync(Room room)
-    {
-        await _context.Rooms.AddAsync(room);
+        try
+        {
+            Room? existedRoom = await _context.Rooms.FirstOrDefaultAsync(el =>
+                el.RoomNumber == room.RoomNumber
+            );
+            bool isNew = existedRoom == null;
+            if (isNew)
+            {
+                await _context.Rooms.AddAsync(room);
+                await _context.SaveChangesAsync();
+                return (isNew, room);
+            }
+            return (isNew, existedRoom!);
+        }
+        catch (DbUpdateException ex)
+        {
+            throw new UpdateException(ex);
+        }
     }
 
     public async Task LogicDeleteRoomAsync(Room room)
     {
-        SetRoomActivation(room, true);
+        SetRoomActivation(room, false);
         await _context.SaveChangesAsync();
     }
 
@@ -47,27 +70,111 @@ public class RoomRepository(AppDbContext context) : IRoomRepository
     {
         Room room =
             await _context.Rooms.FirstOrDefaultAsync(el => el.Id == Id)
-            ?? throw new RoomNotFoundException();
+            ?? throw new RoomNotFoundException(null);
         return room;
     }
 
-    public Task<List<Room>> GetRoomsAsync(
-        int limit,
-        string? cursor,
-        string? sortBy,
-        string? sortOrder,
-        string? filter
-    )
+    public async Task<(List<Room>, int?, int)> GetRoomsAsync(FilterParamsDTO filterParams)
     {
-        throw new NotImplementedException();
+        IQueryable<Room> query = _context.Rooms.AsQueryable().AsNoTracking();
+        query = query.Where(data => data.IsActive == filterParams.IsActive);
+        if (!string.IsNullOrEmpty(filterParams.Filter))
+        {
+            string lowerCaseFilter = filterParams.Filter.ToLower();
+            query = query.Where(data => data.RoomNumber.ToString().Contains(lowerCaseFilter));
+        }
+        bool hasSortBy =
+            !string.IsNullOrWhiteSpace(filterParams.SortBy)
+            && _allowedSortByProperties.Contains(filterParams.SortBy);
+        if (hasSortBy)
+        {
+            ParameterExpression parameter = Expression.Parameter(typeof(Room), "r");
+            MemberExpression property = Expression.Property(parameter, filterParams.SortBy!);
+            Expression<Func<Room, object>> lambda = Expression.Lambda<Func<Room, object>>(
+                Expression.Convert(property, typeof(object)),
+                parameter
+            );
+            if (filterParams.SortOrder == 1)
+            {
+                query = query.OrderBy(lambda);
+            }
+            {
+                query = query.OrderByDescending(lambda);
+            }
+        }
+        else
+        {
+            if (filterParams.SortOrder == 1)
+            {
+                query = query.OrderBy(r => r.RoomNumber);
+            }
+            else
+            {
+                query = query.OrderByDescending(r => r.RoomNumber);
+            }
+            filterParams.SortBy = _defaultSortBy;
+        }
+        if (
+            hasSortBy
+            && !filterParams.SortBy!.Equals(nameof(Room.Id), StringComparison.OrdinalIgnoreCase)
+        )
+        {
+            if (filterParams.SortOrder == 1)
+            {
+                query = ((IOrderedQueryable<Room>)query).ThenBy(r => r.Id);
+            }
+            else
+            {
+                query = ((IOrderedQueryable<Room>)query).ThenByDescending(r => r.Id);
+            }
+        }
+        int totalCount = await query.CountAsync();
+        if (
+            !string.IsNullOrWhiteSpace(filterParams.Cursor)
+            && int.TryParse(filterParams.Cursor, out int cursorId)
+        )
+        {
+            if (filterParams.SortOrder == 1)
+            {
+                query = query.Where(r => r.Id > cursorId);
+            }
+            else
+            {
+                query = query.Where(r => r.Id < cursorId);
+            }
+        }
+        List<Room> rooms = await query.Take(filterParams.Limit + 1).ToListAsync();
+        bool hasMore = rooms.Count > filterParams.Limit;
+        if (hasMore)
+        {
+            rooms.RemoveAt(rooms.Count - 1);
+        }
+        int? nextLastId = hasMore ? rooms[^1].Id : null;
+        return (rooms, nextLastId, totalCount);
     }
 
-    public async Task<Room> UpdateRoomAsync(Room updatedRoom)
+    public async Task<Room> UpdateRoomAsync(Room updatedRoom, int roomId)
     {
-        Room existedRoom =
-            await _context.Rooms.FindAsync(updatedRoom.Id) ?? throw new RoomNotFoundException();
-        _context.Entry(existedRoom).CurrentValues.SetValues(updatedRoom);
-        await _context.SaveChangesAsync();
+        try
+        {
+            Room existedRoom =
+                await _context.Rooms.FindAsync(roomId) ?? throw new RoomNotFoundException(null);
+            existedRoom.RoomNumber = updatedRoom.RoomNumber;
+            existedRoom.RoomType = updatedRoom.RoomType;
+            existedRoom.PricePerNight = updatedRoom.PricePerNight;
+            existedRoom.IsAvailable = updatedRoom.IsAvailable;
+            await _context.SaveChangesAsync();
+            return existedRoom;
+        }
+        catch (DbUpdateException ex)
+        {
+            throw new UpdateException(ex);
+        }
+    }
+
+    public Room SetRoomActivation(Room existedRoom, bool active)
+    {
+        existedRoom.IsActive = active;
         return existedRoom;
     }
 }

@@ -1,5 +1,5 @@
+using api.Common;
 using api.Data;
-using api.Exceptions;
 using api.Models;
 using api.Repository.Interfaces;
 using Microsoft.EntityFrameworkCore;
@@ -15,13 +15,12 @@ public class RoleRepository(AppDbContext context) : IRoleRepository
         throw new NotImplementedException();
     }
 
-    public async Task<(bool, List<Role>)> ValidateRolesExistByIdAsync(List<int> rolesIds)
+    public async Task<List<Role>> GetRolesByIdAsync(List<int> rolesIds)
     {
         List<Role> existingRoleIds = await _context
-            .Roles.Where(r => rolesIds.Contains(r.Id) || r.Name == "User")
+            .Roles.Where(r => rolesIds.Contains(r.Id) || r.Name == AppRoles.User)
             .ToListAsync();
-        bool allRolesExist = existingRoleIds.Count == rolesIds.Count;
-        return (allRolesExist, existingRoleIds);
+        return existingRoleIds;
     }
 
     public async Task<List<Role>> GetRolesByNameAsync(ICollection<string> roleNames)

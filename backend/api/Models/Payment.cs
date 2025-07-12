@@ -10,18 +10,22 @@ public class Payment
     public int Id { get; set; }
 
     [Required]
-    public int ReservationId { get; set; }
-
-    [Required]
-    public decimal Amount { get; set; }
+    public decimal AmountPerNight { get; set; }
+    public decimal? TotalAmount { get; set; }
 
     [Required]
     public DateTime PaymentDate { get; set; }
 
-    public Reservation? Reservation { get; set; }
+    [Required]
+    public int ReservationId { get; set; }
+
+    public Reservation Reservation { get; set; } = null!;
 
     [Required]
-    public virtual PaymentMethod PaymentMethod { get; set; }
+    public PaymentMethod PaymentMethod { get; set; }
+
+    [Required]
+    public PaymentStatus PaymentStatus { get; set; } = PaymentStatus.Pending;
 }
 
 public enum PaymentMethod
@@ -29,4 +33,13 @@ public enum PaymentMethod
     CreditCard,
     Paypal,
     DebitCard,
+}
+
+public enum PaymentStatus
+{
+    Pending,
+    Successful,
+    Failed,
+    Refunded,
+    Cancelled,
 }
