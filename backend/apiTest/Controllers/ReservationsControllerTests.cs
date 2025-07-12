@@ -65,7 +65,6 @@ public class ReservationsControllerTests : IClassFixture<TestFixture>
         var reservationId = _fixture.Create<int>();
         var errorResponse = new ResponseDTO<CreatedReservationDTO?, ErrorDTO?>
         {
-            // Data = null,
             Message = "Reservation not found",
             Success = false,
             Code = StatusCodes.Status404NotFound,
@@ -83,7 +82,6 @@ public class ReservationsControllerTests : IClassFixture<TestFixture>
     [Fact]
     public async Task CreateReservation_WithValidModel_ReturnsOkResult()
     {
-        // Arrange
         var createDto = _fixture.Create<CreateReservationDTO>();
         var createdDto = _fixture.Create<CreatedReservationListDTO>();
         var responseDto = new ResponseDTO<CreatedReservationListDTO?, ErrorDTO?>
@@ -97,7 +95,6 @@ public class ReservationsControllerTests : IClassFixture<TestFixture>
             .Setup(s => s.CreateReservationAsync(createDto))
             .ReturnsAsync(responseDto);
 
-        // Act
         var actionResult = await _sut.CreateReservation(createDto);
 
         // Assert
@@ -110,11 +107,9 @@ public class ReservationsControllerTests : IClassFixture<TestFixture>
     [Fact]
     public async Task CreateReservation_WithInvalidModel_ReturnsInternalServerError()
     {
-        // Arrange
         var createDto = _fixture.Create<CreateReservationDTO>();
         _sut.ModelState.AddModelError("Error", "Sample model error");
 
-        // Act
         var actionResult = await _sut.CreateReservation(createDto);
 
         // Assert
@@ -129,7 +124,6 @@ public class ReservationsControllerTests : IClassFixture<TestFixture>
     [Fact]
     public async Task GetReservations_WhenCalled_ReturnsOkObjectResultWithPaginatedData()
     {
-        // Arrange
         var filterParams = _fixture.Create<FilterParamsDTO>();
         var token = _fixture.Create<string>();
         var decryptedCursor = _fixture.Create<string>();

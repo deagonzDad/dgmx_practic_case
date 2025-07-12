@@ -2,6 +2,7 @@ using api.Controllers;
 using api.DTO.ResponseDTO;
 using api.DTO.RoomsDTO;
 using api.Helpers.Instances;
+using api.Models;
 using api.Services.Interfaces;
 using apiTest.Fixtures;
 using AutoFixture;
@@ -37,7 +38,6 @@ public class RoomControllerTests : IClassFixture<TestFixture>
     [Fact]
     public async Task GetRoomById_WhenRoomExists_ReturnsOkObjectResultWithData()
     {
-        // Arrange
         var roomDto = _fixture.Create<CreatedRoomDTO>();
         var serviceResponse = new ResponseDTO<CreatedRoomDTO?, ErrorDTO?>
         {
@@ -49,7 +49,6 @@ public class RoomControllerTests : IClassFixture<TestFixture>
 
         _roomServiceMock.Setup(s => s.GetRoomByIdAsync(roomId)).ReturnsAsync(serviceResponse);
 
-        // Act
         var actionResult = await _sut.GetRoomById(roomId);
 
         // Assert
@@ -62,7 +61,6 @@ public class RoomControllerTests : IClassFixture<TestFixture>
     [Fact]
     public async Task GetRoomById_WhenRoomDoesNotExist_ReturnsNotFoundResult()
     {
-        // Arrange
         var roomId = _fixture.Create<int>();
         var errorResponse = new ResponseDTO<CreatedRoomDTO?, ErrorDTO?>
         {
@@ -73,7 +71,6 @@ public class RoomControllerTests : IClassFixture<TestFixture>
         };
         _roomServiceMock.Setup(s => s.GetRoomByIdAsync(roomId)).ReturnsAsync(errorResponse);
 
-        // Act
         var actionResult = await _sut.GetRoomById(roomId);
 
         // Assert
@@ -85,7 +82,6 @@ public class RoomControllerTests : IClassFixture<TestFixture>
     [Fact]
     public async Task GetRooms_WhenCalled_ReturnsOkObjectResultWithPaginatedData()
     {
-        // Arrange
         var filterParams = _fixture.Create<FilterParamsDTO>();
         var token = _fixture.Create<string>();
         var decryptedCursor = _fixture.Create<string>();
@@ -109,7 +105,6 @@ public class RoomControllerTests : IClassFixture<TestFixture>
         _encrypterMock.Setup(e => e.EncryptString("next_cursor")).Returns(encryptedNext);
         _encrypterMock.Setup(e => e.EncryptString("prev_cursor")).Returns(encryptedPrev);
 
-        // Act
         var actionResult = await _sut.GetRooms(filterParams, token);
 
         // Assert
@@ -132,7 +127,6 @@ public class RoomControllerTests : IClassFixture<TestFixture>
     [Fact]
     public async Task CreateRoom_WithValidModel_ReturnsOkResultWithData()
     {
-        // Arrange
         var createRoomDto = _fixture.Create<CreateRoomDTO>();
         var createdRoomDto = _fixture.Create<CreatedRoomDTO>();
         var responseDto = new ResponseDTO<CreatedRoomDTO?, ErrorDTO?>
@@ -144,7 +138,6 @@ public class RoomControllerTests : IClassFixture<TestFixture>
 
         _roomServiceMock.Setup(s => s.CreateRoomAsync(createRoomDto)).ReturnsAsync(responseDto);
 
-        // Act
         var actionResult = await _sut.CreateRoom(createRoomDto);
 
         // Assert
@@ -157,11 +150,9 @@ public class RoomControllerTests : IClassFixture<TestFixture>
     [Fact]
     public async Task CreateRoom_WithInvalidModel_ReturnsInternalServerError()
     {
-        // Arrange
         var createRoomDto = _fixture.Create<CreateRoomDTO>();
         _sut.ModelState.AddModelError("Error", "Sample model error");
 
-        // Act
         var actionResult = await _sut.CreateRoom(createRoomDto);
 
         // Assert
@@ -173,7 +164,6 @@ public class RoomControllerTests : IClassFixture<TestFixture>
     [Fact]
     public async Task UpdateRoomById_WhenRoomExistsAndModelIsValid_ReturnsOkResult()
     {
-        // Arrange
         var roomId = _fixture.Create<int>();
         var updateDto = _fixture.Create<UpdateRoomDTO>();
         var updatedDto = _fixture.Create<CreatedRoomDTO>();
@@ -186,7 +176,6 @@ public class RoomControllerTests : IClassFixture<TestFixture>
 
         _roomServiceMock.Setup(s => s.UpdateRoomAsync(updateDto, roomId)).ReturnsAsync(responseDto);
 
-        // Act
         var actionResult = await _sut.UpdateRoomById(roomId, updateDto);
 
         // Assert
@@ -199,7 +188,6 @@ public class RoomControllerTests : IClassFixture<TestFixture>
     [Fact]
     public async Task UpdateRoomById_WhenRoomDoesNotExist_ReturnsNotFoundResult()
     {
-        // Arrange
         var roomId = _fixture.Create<int>();
         var updateDto = _fixture.Create<UpdateRoomDTO>();
         var responseDto = new ResponseDTO<CreatedRoomDTO?, ErrorDTO?>
@@ -212,7 +200,6 @@ public class RoomControllerTests : IClassFixture<TestFixture>
 
         _roomServiceMock.Setup(s => s.UpdateRoomAsync(updateDto, roomId)).ReturnsAsync(responseDto);
 
-        // Act
         var actionResult = await _sut.UpdateRoomById(roomId, updateDto);
 
         // Assert
@@ -224,12 +211,10 @@ public class RoomControllerTests : IClassFixture<TestFixture>
     [Fact]
     public async Task UpdateRoomById_WithInvalidModel_ReturnsInternalServerError()
     {
-        // Arrange
         var roomId = _fixture.Create<int>();
         var updateDto = _fixture.Create<UpdateRoomDTO>();
         _sut.ModelState.AddModelError("Error", "Sample model error");
 
-        // Act
         var actionResult = await _sut.UpdateRoomById(roomId, updateDto);
 
         // Assert
@@ -244,13 +229,10 @@ public class RoomControllerTests : IClassFixture<TestFixture>
     [Fact]
     public void GetRoomType_WhenCalled_ReturnsOkResultWithAllRoomTypes()
     {
-        // Arrange
         var expectedRoomTypesCount = Enum.GetNames(typeof(api.Models.RoomType)).Length;
 
-        // Act
         var actionResult = _sut.GetRoomType();
 
-        // Assert
         var okResult = Assert.IsType<OkObjectResult>(actionResult.Result);
         Assert.Equal(StatusCodes.Status200OK, okResult.StatusCode);
 
@@ -260,18 +242,16 @@ public class RoomControllerTests : IClassFixture<TestFixture>
         Assert.Equal(expectedRoomTypesCount, responseValue.TotalRecords);
         Assert.NotNull(responseValue.Data);
         Assert.Equal(expectedRoomTypesCount, responseValue.Data.Count);
-        Assert.Contains(
-            responseValue.Data,
-            item => item.Name == "Single" && item.Id == (int)api.Models.RoomType.Single
-        );
-        Assert.Contains(
-            responseValue.Data,
-            item => item.Name == "Double" && item.Id == (int)api.Models.RoomType.Double
-        );
-        Assert.Contains(
-            responseValue.Data,
-            item => item.Name == "Deluxe" && item.Id == (int)api.Models.RoomType.Deluxe
-        );
-        // Assert.Contains(responseValue.Data, item => item.Name == "Family" && item.Id == (int)api.models.RoomType.Family);
+
+        foreach (RoomType roomTypeValue in Enum.GetValues<RoomType>())
+        {
+            Assert.Contains(
+                responseValue.Data,
+                item =>
+                    item is not null
+                    && item.Name == roomTypeValue.ToString()
+                    && item.Id == (int)roomTypeValue
+            );
+        }
     }
 }
