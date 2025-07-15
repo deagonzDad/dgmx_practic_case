@@ -17,7 +17,7 @@ public class AuthService : IAuthService
     private readonly IUserRepository _userRepository;
     private readonly IRoleRepository _roleRepository;
     private readonly IHasher _hasher;
-    private readonly JwtTokenGenerator _jwtGenerator;
+    private readonly IJwtTokenGenerator _jwtGenerator;
     private readonly AppDbContext _dbContext;
     private readonly IMapper _mapper;
     private readonly ILogger<AuthService> _logger;
@@ -27,7 +27,7 @@ public class AuthService : IAuthService
         IUserRepository userRepository,
         IRoleRepository roleRepository,
         IHasher hasher,
-        JwtTokenGenerator jwtGenerator,
+        IJwtTokenGenerator jwtGenerator,
         AppDbContext dbContext,
         IMapper mapper,
         ILogger<AuthService> logger,
