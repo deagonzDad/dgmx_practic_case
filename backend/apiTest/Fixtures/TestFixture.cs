@@ -38,6 +38,10 @@ public class TestFixture : Fixture, IDisposable
     public readonly Mock<ILogger<AuthService>> loggerMock;
     public readonly ErrorHandler errorHandler;
 
+    public IReservationRepository reservationRepo;
+    public IPaymentRepository paymentRepo;
+    public IRoomRepository roomRepo;
+
     public TestFixture()
     {
         Customize(new AutoMoqCustomization());
@@ -56,6 +60,9 @@ public class TestFixture : Fixture, IDisposable
 
         userRepo = new UserRepository(DbAppContext);
         roleRepo = new RoleRepository(DbAppContext);
+        reservationRepo = new ReservationRepository(DbAppContext);
+        paymentRepo = new PaymentRepository(DbAppContext);
+        roomRepo = new RoomRepository(DbAppContext);
         hasherMock = this.Freeze<Mock<IHasher>>();
         mapperMock = this.Freeze<Mock<IMapper>>();
         jwtTokenGenerator = this.Create<IJwtTokenGenerator>();
@@ -110,6 +117,7 @@ public class TestFixture : Fixture, IDisposable
                 .Without(r => r.Reservations)
                 .With(r => r.RoomNumber, 1 + i)
                 .With(r => r.Id, 0)
+                .With(r => r.IsActive)
                 .Create();
             rooms.Add(newRoom);
         }
@@ -118,6 +126,7 @@ public class TestFixture : Fixture, IDisposable
         DbAppContext.Rooms.AddRange(rooms);
         DbAppContext.SaveChanges();
 
+        this.Customize<Payment>(composer => composer.With(p => p.Id, 0));
         var reservations = Build<Reservation>()
             .With(r => r.User, users.First())
             .With(r => r.Room, rooms.First())
