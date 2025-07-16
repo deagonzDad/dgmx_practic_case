@@ -68,6 +68,19 @@ public class ReservationService : IReservationService
             responseDTO.Success = true;
             return responseDTO;
         }
+        catch (RoomNotFoundException ex)
+        {
+            await transaction.RollbackAsync();
+            return _errorHandler.CreateErrorRes(
+                ex,
+                responseDTO,
+                "Room not found",
+                "Room not found doesn't exist",
+                StatusCodes.Status400BadRequest,
+                _logger,
+                false
+            );
+        }
         catch (UpdateException ex)
         {
             await transaction.RollbackAsync();
