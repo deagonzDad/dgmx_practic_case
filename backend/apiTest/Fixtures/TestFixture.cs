@@ -1,4 +1,5 @@
 using System;
+using System.Data.Common;
 using api.Data;
 using api.DTO.SettingsDTO;
 using api.Helpers;
@@ -10,6 +11,7 @@ using api.Services;
 using AutoFixture;
 using AutoFixture.AutoMoq;
 using AutoMapper;
+using Microsoft.Data.Sqlite;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Diagnostics;
 using Microsoft.Extensions.Logging;
@@ -22,6 +24,7 @@ public class TestFixture : Fixture, IDisposable
 {
     private static readonly Random _random = new();
 
+    private readonly DbConnection _connection;
     public AppDbContext DbAppContext { get; }
 
     // public readonly Mock<IUserRepository> userRepoMock;
@@ -41,34 +44,25 @@ public class TestFixture : Fixture, IDisposable
         Behaviors.Remove(new ThrowingRecursionBehavior());
         Behaviors.Add(new OmitOnRecursionBehavior());
 
-        var options = new DbContextOptionsBuilder<AppDbContext>()
-            .UseInMemoryDatabase(databaseName: Guid.NewGuid().ToString())
-            .ConfigureWarnings(w => w.Ignore(InMemoryEventId.TransactionIgnoredWarning))
-            .Options;
+        _connection = new SqliteConnection("DataSource=:memory:");
+        _connection.Open();
 
+        var options = new DbContextOptionsBuilder<AppDbContext>().UseSqlite(_connection).Options;
         DbAppContext = new AppDbContext(options);
-
-        // SeedDatabase();
-        var jwtSettings = this.Build<JwtSettingsDTO>()
-            .With(s => s.Key, this.Create<string>())
-            .With(s => s.ExpirationMinutes, this.Create<int>())
-            .Create();
+        DbAppContext.Database.EnsureCreated();
 
         optionsMock = this.Freeze<Mock<IOptions<JwtSettingsDTO>>>();
-        optionsMock.Setup(o => o.Value).Returns(jwtSettings);
-        this.Register(() => optionsMock.Object);
+        SetIOptions();
 
-        this.Register<IJwtTokenGenerator>(() => this.Create<JwtTokenGenerator>());
-        // _fixture.Register<IJwtTokenGenerator, JwtTokenGenerator>();
-
-        userRepo = new UserRepository(DbAppContext); //this.Freeze<Mock<>>();
+        userRepo = new UserRepository(DbAppContext);
         roleRepo = new RoleRepository(DbAppContext);
         hasherMock = this.Freeze<Mock<IHasher>>();
         mapperMock = this.Freeze<Mock<IMapper>>();
         jwtTokenGenerator = this.Create<IJwtTokenGenerator>();
 
         loggerMock = this.Freeze<Mock<ILogger<AuthService>>>();
-        errorHandler = new ErrorHandler(); //this.Freeze<Mock<>>();
+        errorHandler = new ErrorHandler();
+
         LimitDecimalMaxRange();
         SeedDatabase();
     }
@@ -136,8 +130,22 @@ public class TestFixture : Fixture, IDisposable
         DbAppContext.SaveChanges();
     }
 
+    private void SetIOptions()
+    {
+        var jwtSettings = this.Build<JwtSettingsDTO>()
+            .With(s => s.Key, this.Create<string>())
+            .With(s => s.ExpirationMinutes, this.Create<int>())
+            .Create();
+
+        optionsMock.Setup(o => o.Value).Returns(jwtSettings);
+        this.Register(() => optionsMock.Object);
+
+        this.Register<IJwtTokenGenerator>(() => this.Create<JwtTokenGenerator>());
+    }
+
     public void Dispose()
     {
+        _connection.Dispose();
         DbAppContext.Dispose();
     }
 }
