@@ -182,7 +182,7 @@ public class AuthServiceTests : IClassFixture<TestFixture>
     }
 
     [Fact]
-    public async Task SignupAsync_WhenCommitFails_ThrowsExceptionAndRollsBack()
+    public void SignupAsync_WhenCommitFails_ThrowsExceptionAndRollsBack()
     {
         // Arrange
         var createDto = _fixture.Create<UserCreateDTO>();
