@@ -111,13 +111,13 @@ public class TestFixture : Fixture, IDisposable
             userId++;
         }
         List<Room> rooms = [];
-        for (int i = 0; i < 1; i++)
+        for (int i = 0; i < 10; i++)
         {
             var newRoom = Build<Room>()
                 .Without(r => r.Reservations)
                 .With(r => r.RoomNumber, 1 + i)
                 .With(r => r.Id, 0)
-                .With(r => r.IsActive)
+                .With(r => r.IsActive, true)
                 .Create();
             rooms.Add(newRoom);
         }
