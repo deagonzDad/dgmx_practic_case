@@ -1,15 +1,12 @@
-using api.Data;
 using api.DTO.ResponseDTO;
 using api.DTO.RoomsDTO;
-using api.Exceptions;
 using api.Models;
-using api.Repository.Interfaces;
 using api.Services;
 using apiTest.Fixtures;
 using AutoFixture;
-using AutoMapper;
 using Microsoft.AspNetCore.Http;
-using Microsoft.EntityFrameworkCore.Storage;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 using Moq;
 
 namespace apiTest.Services;
@@ -18,62 +15,51 @@ public class RoomServiceTests : IClassFixture<TestFixture>
 {
     private readonly TestFixture _fixture;
     private readonly RoomService _sut;
-    private readonly Mock<IRoomRepository> _roomRepoMock;
-    private readonly Mock<IMapper> _mapperMock;
-    private readonly Mock<AppDbContext> _dbContextMock;
-    private readonly Mock<IDbContextTransaction> _transactionMock;
 
     public RoomServiceTests(TestFixture fixture)
     {
         _fixture = fixture;
-        _roomRepoMock = _fixture.Freeze<Mock<IRoomRepository>>();
-        _mapperMock = _fixture.Freeze<Mock<IMapper>>();
-        _dbContextMock = _fixture.Freeze<Mock<AppDbContext>>();
-        _transactionMock = _fixture.Freeze<Mock<IDbContextTransaction>>();
-
-        _dbContextMock
-            .Setup(db => db.Database.BeginTransactionAsync(It.IsAny<CancellationToken>()))
-            .ReturnsAsync(_transactionMock.Object);
-
-        _sut = _fixture.Create<RoomService>();
+        _sut = new RoomService(
+            _fixture.DbAppContext,
+            _fixture.roomRepo,
+            _fixture.mapperMock.Object,
+            _fixture.errorHandler,
+            _fixture.Create<ILogger<RoomService>>()
+        );
     }
 
     [Fact]
     public async Task CreateRoomAsync_WhenSuccessful_ReturnsCreatedRoom()
     {
-        // Arrange
         var createDto = _fixture.Create<CreateRoomDTO>();
-        var roomMdl = _fixture.Create<Room>();
+        var roomMdl = _fixture
+            .Build<Room>()
+            .With(r => r.Id, 0)
+            .With(r => r.IsActive, true)
+            .With(r => r.IsAvailable, true)
+            .Without(r => r.Reservations)
+            .Create();
         var createdDto = _fixture.Create<CreatedRoomDTO>();
 
-        _mapperMock.Setup(m => m.Map<Room>(createDto)).Returns(roomMdl);
-        _roomRepoMock.Setup(r => r.CreateRoomAsync(roomMdl)).ReturnsAsync((true, roomMdl));
-        _roomRepoMock.Setup(r => r.SetRoomActivation(roomMdl, true)).Returns(roomMdl);
-        _roomRepoMock.Setup(r => r.UpdateRoomAsync(roomMdl, roomMdl.Id)).ReturnsAsync(roomMdl);
-        _mapperMock.Setup(m => m.Map<CreatedRoomDTO>(roomMdl)).Returns(createdDto);
+        _fixture.mapperMock.Setup(m => m.Map<Room>(createDto)).Returns(roomMdl);
+        _fixture.mapperMock.Setup(m => m.Map<CreatedRoomDTO>(roomMdl)).Returns(createdDto);
 
-        // Act
         var result = await _sut.CreateRoomAsync(createDto);
 
         // Assert
         Assert.True(result.Success);
         Assert.Equal(createdDto, result.Data);
-        _transactionMock.Verify(t => t.CommitAsync(It.IsAny<CancellationToken>()), Times.Once);
     }
 
     [Fact]
     public async Task GetRoomByIdAsync_WhenRoomExists_ReturnsRoom()
     {
-        // Arrange
-        var roomId = _fixture.Create<int>();
-        var room = _fixture.Create<Room>();
+        var room = await _fixture.DbAppContext.Rooms.FirstAsync();
         var createdDto = _fixture.Create<CreatedRoomDTO>();
 
-        _roomRepoMock.Setup(r => r.GetRoomByIdAsync(roomId)).ReturnsAsync(room);
-        _mapperMock.Setup(m => m.Map<CreatedRoomDTO>(room)).Returns(createdDto);
+        _fixture.mapperMock.Setup(m => m.Map<CreatedRoomDTO>(room)).Returns(createdDto);
 
-        // Act
-        var result = await _sut.GetRoomByIdAsync(roomId);
+        var result = await _sut.GetRoomByIdAsync(room.Id);
 
         // Assert
         Assert.True(result.Success);
@@ -83,13 +69,8 @@ public class RoomServiceTests : IClassFixture<TestFixture>
     [Fact]
     public async Task GetRoomByIdAsync_WhenRoomDoesNotExist_ReturnsError()
     {
-        // Arrange
-        var roomId = _fixture.Create<int>();
-        _roomRepoMock
-            .Setup(r => r.GetRoomByIdAsync(roomId))
-            .ThrowsAsync(new RoomNotFoundException(null));
+        var roomId = 999;
 
-        // Act
         var result = await _sut.GetRoomByIdAsync(roomId);
 
         // Assert
@@ -101,57 +82,90 @@ public class RoomServiceTests : IClassFixture<TestFixture>
     [Fact]
     public async Task UpdateRoomAsync_WhenRoomExists_ReturnsUpdatedRoom()
     {
-        // Arrange
-        var roomId = _fixture.Create<int>();
+        int roomId = await _fixture.DbAppContext.Rooms.Select(r => r.Id).FirstAsync();
         var updateDto = _fixture.Create<UpdateRoomDTO>();
-        var roomObj = _fixture.Create<Room>();
-        var updatedRoom = _fixture.Create<Room>();
+        var updatedRoom = _fixture.Build<Room>().Create();
         var createdDto = _fixture.Create<CreatedRoomDTO>();
 
-        _mapperMock.Setup(m => m.Map<Room>(updateDto)).Returns(roomObj);
-        _roomRepoMock.Setup(r => r.UpdateRoomAsync(roomObj, roomId)).ReturnsAsync(updatedRoom);
-        _mapperMock.Setup(m => m.Map<CreatedRoomDTO>(updatedRoom)).Returns(createdDto);
+        _fixture.mapperMock.Setup(m => m.Map<Room>(updateDto)).Returns(updatedRoom);
+        _fixture.mapperMock.Setup(m => m.Map<CreatedRoomDTO>(updatedRoom)).Returns(createdDto);
 
-        // Act
         var result = await _sut.UpdateRoomAsync(updateDto, roomId);
 
         // Assert
         Assert.True(result.Success);
-        Assert.Equal(createdDto, result.Data);
+        Assert.NotNull(result.Data);
+
+        var updatedRoomFromDb = await _fixture.DbAppContext.Rooms.FirstAsync();
+
+        Assert.NotNull(updatedRoomFromDb);
+        Assert.Equal(updatedRoom.RoomNumber, updatedRoomFromDb.RoomNumber);
+        Assert.Equal(updatedRoom.RoomType, updatedRoomFromDb.RoomType);
+        Assert.Equal(updatedRoom.PricePerNight, updatedRoomFromDb.PricePerNight);
+        Assert.Equal(updatedRoom.IsAvailable, updatedRoomFromDb.IsAvailable);
     }
 
     [Fact]
     public async Task DeleteRoomAsync_WhenRoomExists_ReturnsSuccess()
     {
-        // Arrange
-        var roomId = _fixture.Create<int>();
-        var room = _fixture.Create<Room>();
-        _roomRepoMock.Setup(r => r.GetRoomByIdAsync(roomId)).ReturnsAsync(room);
-        _roomRepoMock.Setup(r => r.LogicDeleteRoomAsync(room)).Returns(Task.CompletedTask);
+        var room = await _fixture.DbAppContext.Rooms.FirstAsync();
 
-        // Act
-        var result = await _sut.DeleteRoomAsync(roomId);
+        var result = await _sut.DeleteRoomAsync(room.Id);
 
         // Assert
         Assert.True(result.Success);
-        _transactionMock.Verify(t => t.CommitAsync(It.IsAny<CancellationToken>()), Times.Once);
     }
 
     [Fact]
     public async Task DeleteRoomAsync_WhenRoomDoesNotExist_ReturnsError()
     {
-        // Arrange
-        var roomId = _fixture.Create<int>();
-        _roomRepoMock
-            .Setup(r => r.GetRoomByIdAsync(roomId))
-            .ThrowsAsync(new RoomNotFoundException(null));
+        var roomId = 999;
 
-        // Act
         var result = await _sut.DeleteRoomAsync(roomId);
 
         // Assert
         Assert.False(result.Success);
         Assert.Equal(StatusCodes.Status404NotFound, result.Code);
-        _transactionMock.Verify(t => t.RollbackAsync(It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Fact]//TODO: review the test having error in the Asserts
+    public async Task GetRoomsAsync_WhenCalled_ReturnsPaginatedData()
+    {
+        var filterParams = new FilterParamsDTO { Limit = 5 };
+        List<Room> allReservationsInDb = await _fixture
+            .DbAppContext.Rooms.OrderBy(r => r.Id)
+            .ToListAsync();
+        var expectedTotalCount = allReservationsInDb.Count;
+        List<Room> expectedPageOfReservation = [.. allReservationsInDb.Take(filterParams.Limit)];
+        string expectedNextCursor = expectedPageOfReservation.Last().Id.ToString();
+
+        List<Room>? capturedListData = [];
+        var createdDto = _fixture
+            .Build<CreatedRoomDTO>()
+            .CreateMany(expectedPageOfReservation.Count)
+            .ToList();
+
+        _fixture
+            .mapperMock.Setup(m => m.Map<List<CreatedRoomDTO>>(It.IsAny<List<Room>>()))
+            .Callback(
+                (object inputList) =>
+                {
+                    capturedListData = inputList as List<Room>;
+                }
+            )
+            .Returns(createdDto);
+
+        var result = await _sut.GetRoomsAsync(filterParams);
+
+        // Assert
+        Assert.Equal(expectedTotalCount, result.TotalRecords);
+        Assert.Equal(expectedNextCursor, result.Next!.ToString());
+        Assert.NotNull(result.Data);
+        Assert.Null(result.Error);
+        Assert.Equal(filterParams.Limit, result.Data.Count);
+
+        var outputIds = capturedListData.Select(r => r.Id);
+        var expectedIds = expectedPageOfReservation.Select(r => r.Id);
+        Assert.Equal(outputIds, expectedIds);
     }
 }
