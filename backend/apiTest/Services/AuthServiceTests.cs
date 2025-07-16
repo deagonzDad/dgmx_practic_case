@@ -87,14 +87,26 @@ public class AuthServiceTests : IClassFixture<TestFixture>
     [Fact]
     public async Task SignupAsync_WithValidData_ReturnsCreatedUser()
     {
-        // ARRANGE
+        string mockEmail = "new-user-test@example.com";
+        string mockUsername = "new-user-test";
         var createDto = _fixture
             .Build<UserCreateDTO>()
-            .With(u => u.Email, "new-user-test@example.com")
-            .With(u => u.Username, "new-user-test")
+            .With(u => u.Email, mockEmail)
+            .With(u => u.Username, mockUsername)
             .Create();
-        var user = _fixture.Create<User>();
-        var createdUserDto = _fixture.Create<UserCreatedDTO>();
+        var user = _fixture
+            .Build<User>()
+            .Without(u => u.Reservations)
+            .Without(u => u.Roles)
+            .Without(u => u.UserRoles)
+            .With(u => u.Email, mockEmail)
+            .With(u => u.Username, mockUsername)
+            .Create();
+        var createdUserDto = _fixture
+            .Build<UserCreatedDTO>()
+            .With(u => u.Email, mockEmail)
+            .With(u => u.Username, mockUsername)
+            .Create();
 
         _fixture
             .hasherMock.Setup(h => h.HashPassword(createDto.Password))
@@ -102,7 +114,6 @@ public class AuthServiceTests : IClassFixture<TestFixture>
         _fixture.mapperMock.Setup(m => m.Map<User>(createDto)).Returns(user);
         _fixture.mapperMock.Setup(m => m.Map<UserCreatedDTO>(user)).Returns(createdUserDto);
 
-        // ACT
         var result = await _sut.SignupAsync(createDto);
 
         // ASSERT
@@ -123,7 +134,29 @@ public class AuthServiceTests : IClassFixture<TestFixture>
         var createDto = _fixture
             .Build<UserCreateDTO>()
             .With(u => u.Email, existingUser.Email)
+            .With(u => u.Username, existingUser.Username)
+            .With(u => u.Password, existingUser.Password)
             .Create();
+        var user = _fixture
+            .Build<User>()
+            .Without(u => u.Reservations)
+            .Without(u => u.Roles)
+            .Without(u => u.UserRoles)
+            .With(u => u.Id, 0)
+            .With(u => u.Email, existingUser.Email)
+            .With(u => u.Username, existingUser.Username)
+            .With(u => u.Password, existingUser.Password)
+            .Create();
+        var createdUserDto = _fixture
+            .Build<UserCreatedDTO>()
+            .With(u => u.Email, existingUser.Email)
+            .With(u => u.Username, existingUser.Username)
+            .Create();
+        _fixture
+            .hasherMock.Setup(h => h.HashPassword(createDto.Password))
+            .Returns("hashed_password");
+        _fixture.mapperMock.Setup(m => m.Map<User>(createDto)).Returns(user);
+        _fixture.mapperMock.Setup(m => m.Map<UserCreatedDTO>(user)).Returns(createdUserDto);
 
         var result = await _sut.SignupAsync(createDto);
 
