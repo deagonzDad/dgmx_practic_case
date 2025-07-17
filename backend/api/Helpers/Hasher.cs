@@ -7,7 +7,7 @@ public class PasswordHasher : IHasher
 {
     private const int SaltSize = 16;
     private const int KeySize = 32;
-    private const int Iterations = 1000;
+    private const int Iterations = 20000;
 
     public string HashPassword(string password)
     {
