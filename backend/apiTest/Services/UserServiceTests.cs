@@ -6,8 +6,9 @@ using api.Repository.Interfaces;
 using api.Services;
 using apiTest.Fixtures;
 using AutoFixture;
-using AutoMapper;
 using Microsoft.AspNetCore.Http;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 using Moq;
 
 namespace apiTest.Services;
@@ -16,39 +17,64 @@ public class UserServiceTests : IClassFixture<TestFixture>
 {
     private readonly TestFixture _fixture;
     private readonly UserService _sut;
-    private readonly Mock<IUserRepository> _userRepoMock;
-    private readonly Mock<IMapper> _mapperMock;
 
     public UserServiceTests(TestFixture fixture)
     {
         _fixture = fixture;
-        _userRepoMock = _fixture.Freeze<Mock<IUserRepository>>();
-        _mapperMock = _fixture.Freeze<Mock<IMapper>>();
-        _sut = _fixture.Create<UserService>();
+        _sut = new UserService(
+            _fixture.DbAppContext,
+            _fixture.mapperMock.Object,
+            _fixture.Create<ILogger<UserService>>(),
+            _fixture.errorHandler,
+            _fixture.userRepo
+        );
     }
 
     [Fact]
-    public async Task GetUsersAsync_WhenUsersExist_ReturnsPaginatedData()
+    public async Task GetUsersAsync_WhenCalled_ReturnsPaginatedData()
     {
         // Arrange
-        var filterParams = _fixture.Create<FilterParamsDTO>();
-        var users = _fixture.CreateMany<User>(5).ToList();
-        var userDtos = _fixture.CreateMany<UserCreatedDTO>(5).ToList();
-        var nextCursor = _fixture.Create<int>();
-        var totalCount = users.Count;
+        var filterParams = new FilterParamsDTO { Limit = 5 };
+        var allUsersInDb = await _fixture
+            .DbAppContext.Users.Where(u => u.IsActive == true)
+            .OrderBy(u => u.Id)
+            .ToListAsync();
+        var expectedTotalCount = allUsersInDb.Count;
+        var expectedPageOfUsers = allUsersInDb.Take(filterParams.Limit).ToList();
+        string? expectedNextCursor =
+            (expectedPageOfUsers.Count > filterParams.Limit)
+                ? expectedPageOfUsers.LastOrDefault()?.Id.ToString()
+                : null;
+        List<User>? capturedListData = null;
+        var createdDto = _fixture
+            .Build<UserCreatedDTO>()
+            .CreateMany(expectedPageOfUsers.Count)
+            .ToList();
 
-        _userRepoMock
-            .Setup(r => r.GetUsersAsync(filterParams))
-            .ReturnsAsync((users, nextCursor, totalCount));
-        _mapperMock.Setup(m => m.Map<List<UserCreatedDTO>>(users)).Returns(userDtos);
+        _fixture
+            .mapperMock.Setup(m => m.Map<List<UserCreatedDTO>>(It.IsAny<List<User>>()))
+            .Callback(
+                (object inputList) =>
+                {
+                    capturedListData = inputList as List<User>;
+                }
+            )
+            .Returns(createdDto);
 
         // Act
         var result = await _sut.GetUsersAsync(filterParams);
 
         // Assert
-        Assert.Equal(userDtos, result.Data!);
-        Assert.Equal(totalCount, result.TotalRecords);
-        Assert.Equal(nextCursor.ToString(), result.Next);
+        Assert.Equal(expectedTotalCount, result.TotalRecords);
+        Assert.Equal(expectedNextCursor, string.IsNullOrEmpty(result.Next) ? null : result.Next);
+        Assert.NotNull(result.Data);
+        Assert.Null(result.Error);
+        Assert.Equal(filterParams.Limit, result.Data.Count);
+
+        Assert.NotNull(capturedListData);
+        var outputIds = capturedListData.Select(r => r.Id);
+        var expectedIds = expectedPageOfUsers.Select(r => r.Id);
+        Assert.Equal(expectedIds, outputIds);
     }
 
     [Fact]
@@ -56,22 +82,32 @@ public class UserServiceTests : IClassFixture<TestFixture>
     {
         // Arrange
         var filterParams = _fixture.Create<FilterParamsDTO>();
+        var userRepoMock = new Mock<IUserRepository>();
         var users = new List<User>();
-        var userDtos = new List<UserCreatedDTO>();
         int? nextCursor = null;
         var totalCount = 0;
 
-        _userRepoMock
+        userRepoMock
             .Setup(r => r.GetUsersAsync(filterParams))
             .ReturnsAsync((users, nextCursor, totalCount));
-        _mapperMock.Setup(m => m.Map<List<UserCreatedDTO>>(users)).Returns(userDtos);
+        _fixture.mapperMock.Setup(m => m.Map<List<UserCreatedDTO>>(users)).Returns([]);
+
+        var sut = new UserService(
+            _fixture.DbAppContext,
+            _fixture.mapperMock.Object,
+            _fixture.Create<ILogger<UserService>>(),
+            _fixture.errorHandler,
+            userRepoMock.Object
+        );
 
         // Act
-        var result = await _sut.GetUsersAsync(filterParams);
+        var result = await sut.GetUsersAsync(filterParams);
 
         // Assert
+        Assert.NotNull(result.Data);
         Assert.Empty(result.Data);
         Assert.Equal(0, result.TotalRecords);
+        Assert.Null(result.Error);
     }
 
     [Fact]
@@ -79,15 +115,25 @@ public class UserServiceTests : IClassFixture<TestFixture>
     {
         // Arrange
         var filterParams = _fixture.Create<FilterParamsDTO>();
-        _userRepoMock
+        var userRepoMock = new Mock<IUserRepository>();
+        userRepoMock
             .Setup(r => r.GetUsersAsync(filterParams))
             .ThrowsAsync(new UserNotFoundException(null));
 
+        var sut = new UserService(
+            _fixture.DbAppContext,
+            _fixture.mapperMock.Object,
+            _fixture.Create<ILogger<UserService>>(),
+            _fixture.errorHandler,
+            userRepoMock.Object
+        );
+
         // Act
-        var result = await _sut.GetUsersAsync(filterParams);
+        var result = await sut.GetUsersAsync(filterParams);
 
         // Assert
-        Assert.Null(result.Data);
-        // Assert.Equal(StatusCodes.Status404NotFound, result.Code);
+        Assert.Empty(result.Data);
+        Assert.NotNull(result.Error);
+        Assert.Equal(StatusCodes.Status404NotFound, result.Error.ApiErrorCode);
     }
 }
