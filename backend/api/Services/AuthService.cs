@@ -12,38 +12,21 @@ using AutoMapper;
 
 namespace api.Services;
 
-public class AuthService : IAuthService
+public class AuthService(
+    IUserRepository userRepository,
+    IRoleRepository roleRepository,
+    IHasher hasher,
+    IJwtTokenGenerator jwtGenerator,
+    AppDbContext dbContext,
+    IMapper mapper
+) : IAuthService
 {
-    private readonly IUserRepository _userRepository;
-    private readonly IRoleRepository _roleRepository;
-    private readonly IHasher _hasher;
-    private readonly IJwtTokenGenerator _jwtGenerator;
-    private readonly AppDbContext _dbContext;
-    private readonly IMapper _mapper;
-    private readonly ILogger<AuthService> _logger;
-    private readonly IErrorHandler _errorHandler;
-
-    public AuthService(
-        IUserRepository userRepository,
-        IRoleRepository roleRepository,
-        IHasher hasher,
-        IJwtTokenGenerator jwtGenerator,
-        AppDbContext dbContext,
-        IMapper mapper,
-        ILogger<AuthService> logger,
-        IErrorHandler errorHandler
-    )
-    {
-        _userRepository = userRepository;
-        _roleRepository = roleRepository;
-        _hasher = hasher;
-        _jwtGenerator = jwtGenerator;
-        _dbContext = dbContext;
-        _mapper = mapper;
-        _logger = logger;
-        _errorHandler = errorHandler;
-        _errorHandler.InitService("USER", "USER_ERROR");
-    }
+    private readonly IUserRepository _userRepository = userRepository;
+    private readonly IRoleRepository _roleRepository = roleRepository;
+    private readonly IHasher _hasher = hasher;
+    private readonly IJwtTokenGenerator _jwtGenerator = jwtGenerator;
+    private readonly AppDbContext _dbContext = dbContext;
+    private readonly IMapper _mapper = mapper;
 
     public async Task<ResponseDTO<JWTTokenResDTO?, ErrorDTO?>> LoginAsync(UserSignInDTO userDTO)
     {
@@ -67,27 +50,13 @@ public class AuthService : IAuthService
             responseDTO.Success = true;
             return responseDTO;
         }
-        catch (UserNotFoundException ex)
+        catch (UserNotFoundException)
         {
-            return _errorHandler.CreateErrorRes(
-                ex,
-                responseDTO,
-                "Invalid username or password.",
-                "User not found in the database",
-                StatusCodes.Status400BadRequest,
-                _logger
-            );
+            throw new InvalidCredentialsException(null);
         }
-        catch (UnauthorizedActionException ex)
+        catch (Exception)
         {
-            return _errorHandler.CreateErrorRes(
-                ex,
-                responseDTO,
-                "Invalid username or password.",
-                "Password does not match the username",
-                StatusCodes.Status400BadRequest,
-                _logger
-            );
+            throw;
         }
     }
 
@@ -95,7 +64,7 @@ public class AuthService : IAuthService
     {
         ResponseDTO<UserCreatedDTO?, ErrorDTO?> responseDTO = new()
         {
-            Success = true,
+            Success = false,
             Message = "",
         };
         using var transaction = await _dbContext.Database.BeginTransactionAsync();
@@ -113,45 +82,10 @@ public class AuthService : IAuthService
             responseDTO.Code = 201;
             return responseDTO;
         }
-        catch (UpdateException ex)
+        catch (Exception)
         {
             await transaction.RollbackAsync();
-            return _errorHandler.CreateErrorRes(
-                ex,
-                responseDTO,
-                "An error occurred while processing your request.",
-                "Database error in user creation",
-                StatusCodes.Status400BadRequest,
-                _logger
-            );
-        }
-        catch (AlreadyExistException ex)
-        {
-            await transaction.RollbackAsync();
-            return _errorHandler.CreateErrorRes(
-                ex,
-                responseDTO,
-                "Bad password or username",
-                "Something went wrong creating the user name",
-                StatusCodes.Status409Conflict,
-                _logger
-            );
-        }
-        catch (RoleNotFoundException ex)
-        {
-            await transaction.RollbackAsync();
-            return _errorHandler.CreateErrorRes(
-                ex,
-                responseDTO,
-                "Role not found.",
-                "Role not found in the database",
-                StatusCodes.Status400BadRequest,
-                _logger
-            );
-        }
-        finally
-        {
-            await transaction.DisposeAsync();
+            throw;
         }
     }
 }

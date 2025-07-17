@@ -1,10 +1,15 @@
+using api.Data;
 using api.DTO.UsersDTO;
+using api.Exceptions;
 using api.Models;
+using api.Repository;
+using api.Repository.Interfaces;
 using api.Services;
 using apiTest.Fixtures;
 using AutoFixture;
 using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Storage;
 using Moq;
 
 namespace apiTest.Services;
@@ -24,9 +29,7 @@ public class AuthServiceTests
             _fixture.hasherMock.Object,
             _fixture.jwtTokenGenerator,
             _fixture.DbAppContext,
-            _fixture.mapperMock.Object,
-            _fixture.loggerMock.Object,
-            _fixture.errorHandler
+            _fixture.mapperMock.Object
         );
     }
 
@@ -52,13 +55,9 @@ public class AuthServiceTests
             .Build<UserSignInDTO>()
             .With(u => u.Email, "nonexistinguser@example.com")
             .Create();
-
-        var result = await _sut.LoginAsync(loginDto);
-
-        // Assert
-        Assert.False(result.Success);
-        Assert.Null(result.Data);
-        Assert.Equal(StatusCodes.Status400BadRequest, result.Code);
+        await Assert.ThrowsAsync<InvalidCredentialsException>(async () =>
+            await _sut.LoginAsync(loginDto)
+        );
     }
 
     [Fact]
@@ -76,13 +75,9 @@ public class AuthServiceTests
             .hasherMock.Setup(h => h.VerifyPassword(loginDto.Password, userFromDb.Password))
             .Returns(false);
 
-        // ACT
-        var result = await _sut.LoginAsync(loginDto);
-
-        // ASSERT
-        Assert.False(result.Success);
-        Assert.Null(result.Data);
-        Assert.Equal(StatusCodes.Status400BadRequest, result.Code);
+        await Assert.ThrowsAsync<UnauthorizedActionException>(async () =>
+            await _sut.LoginAsync(loginDto)
+        );
     }
 
     [Fact]
@@ -160,11 +155,9 @@ public class AuthServiceTests
         _fixture.mapperMock.Setup(m => m.Map<User>(createDto)).Returns(user);
         _fixture.mapperMock.Setup(m => m.Map<UserCreatedDTO>(user)).Returns(createdUserDto);
 
-        var result = await _sut.SignupAsync(createDto);
-
-        // Assert
-        Assert.False(result.Success);
-        Assert.Equal(StatusCodes.Status409Conflict, result.Code);
+        await Assert.ThrowsAsync<AlreadyExistException>(async () =>
+            await _sut.SignupAsync(createDto)
+        );
     }
 
     [Fact]
@@ -205,23 +198,5 @@ public class AuthServiceTests
         Assert.True(result.Success);
         Assert.NotNull(result.Data);
         Assert.Equal(StatusCodes.Status201Created, result.Code);
-    }
-
-    [Fact]
-    public void SignupAsync_WhenCommitFails_ThrowsExceptionAndRollsBack()
-    {
-        // Arrange
-        var createDto = _fixture.Create<UserCreateDTO>();
-        var user = _fixture.Create<User>();
-        var roles = _fixture.CreateMany<Role>().ToList();
-
-        _fixture
-            .hasherMock.Setup(h => h.HashPassword(createDto.Password))
-            .Returns("hashed_password");
-        _fixture.mapperMock.Setup(m => m.Map<User>(createDto)).Returns(user);
-
-        // This test is complex to implement with an in-memory database.
-        // It would require mocking the DbContext transaction behavior.
-        // For now, it remains as a placeholder.
     }
 }

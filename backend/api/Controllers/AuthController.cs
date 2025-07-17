@@ -23,23 +23,12 @@ namespace api.Controllers
             [FromBody] UserCreateDTO userDTO
         )
         {
-            try
-            {
-                if (!ModelState.IsValid)
-                    return BadRequest(ModelState);
-                ResponseDTO<UserCreatedDTO?, ErrorDTO?> responseDTO =
-                    await _authService.SignupAsync(userDTO);
-                return CreateResponse(responseDTO);
-            }
-            catch (Exception ex)
-            {
-                string messageError = "Something goes wrong unexpectedly";
-                _logger.LogError(ex, "{messageError}", messageError);
-                return StatusCode(
-                    StatusCodes.Status500InternalServerError,
-                    new { msg = messageError }
-                );
-            }
+            if (!ModelState.IsValid)
+                return BadRequest(ModelState);
+            ResponseDTO<UserCreatedDTO?, ErrorDTO?> responseDTO = await _authService.SignupAsync(
+                userDTO
+            );
+            return CreateResponse(responseDTO);
         }
 
         [AllowAnonymous]
@@ -49,24 +38,10 @@ namespace api.Controllers
             [FromBody] UserSignInDTO login
         )
         {
-            try
-            {
-                if (!ModelState.IsValid)
-                    return BadRequest(ModelState);
-                ResponseDTO<JWTTokenResDTO?, ErrorDTO?> response = await _authService.LoginAsync(
-                    login
-                );
-                return CreateResponse(response);
-            }
-            catch (Exception ex)
-            {
-                string messageError = "Something goes wrong unexpectedly";
-                _logger.LogError(ex, "{messageError}", messageError);
-                return StatusCode(
-                    StatusCodes.Status500InternalServerError,
-                    new { msg = messageError }
-                );
-            }
+            if (!ModelState.IsValid)
+                return BadRequest(ModelState);
+            ResponseDTO<JWTTokenResDTO?, ErrorDTO?> response = await _authService.LoginAsync(login);
+            return CreateResponse(response);
         }
     }
 }
