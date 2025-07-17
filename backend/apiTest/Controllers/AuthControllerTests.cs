@@ -12,16 +12,16 @@ using Moq;
 
 namespace apiTest.Controllers;
 
-public class AuthControllerTests : IClassFixture<TestFixture>
+public class AuthControllerTests
 {
     private readonly TestFixture _fixture;
     private readonly AuthController _sut;
     private readonly Mock<IAuthService> _authServiceMock;
     private readonly Mock<ILogger<AuthController>> _loggerMock;
 
-    public AuthControllerTests(TestFixture fixture)
+    public AuthControllerTests()
     {
-        _fixture = fixture;
+        _fixture = new TestFixture();
         _authServiceMock = _fixture.Freeze<Mock<IAuthService>>();
         _loggerMock = _fixture.Freeze<Mock<ILogger<AuthController>>>();
 
