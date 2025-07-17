@@ -149,18 +149,6 @@ public class AuthService : IAuthService
                 _logger
             );
         }
-        // catch (Exception ex)
-        // {
-        //     await transaction.RollbackAsync();
-        //     return _errorHandler.CreateErrorRes(
-        //         ex,
-        //         responseDTO,
-        //         "something went wrong in the request",
-        //         "An error occurred while processing your request.",
-        //         StatusCodes.Status500InternalServerError,
-        //         _logger
-        //     );
-        // }
         finally
         {
             await transaction.DisposeAsync();

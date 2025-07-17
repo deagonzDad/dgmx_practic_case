@@ -5,17 +5,18 @@ using apiTest.Fixtures;
 using AutoFixture;
 using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
+using Moq;
 
 namespace apiTest.Services;
 
-public class AuthServiceTests : IClassFixture<TestFixture>
+public class AuthServiceTests
 {
     private readonly TestFixture _fixture;
     private readonly AuthService _sut;
 
-    public AuthServiceTests(TestFixture fixture)
+    public AuthServiceTests()
     {
-        _fixture = fixture;
+        _fixture = new TestFixture();
 
         _sut = new AuthService(
             _fixture.userRepo,
@@ -96,6 +97,7 @@ public class AuthServiceTests : IClassFixture<TestFixture>
             .Create();
         var user = _fixture
             .Build<User>()
+            .With(u => u.Id, 0)
             .Without(u => u.Reservations)
             .Without(u => u.Roles)
             .Without(u => u.UserRoles)
@@ -170,15 +172,39 @@ public class AuthServiceTests : IClassFixture<TestFixture>
     {
         var createDto = _fixture
             .Build<UserCreateDTO>()
-            .With(u => u.Roles, new List<int> { 999, 1001 }) // Non-existing roles
+            .With(u => u.Roles, [999, 1001]) // Non-existing roles
             .Create();
-
+        var user = _fixture
+            .Build<User>()
+            .Without(u => u.Reservations)
+            .Without(u => u.Roles)
+            .Without(u => u.UserRoles)
+            .With(u => u.Id, 0)
+            .With(u => u.Email, "random@username.com")
+            .With(u => u.Username, "randomUsername")
+            .With(u => u.Password, "randomUsername")
+            .Create();
+        var createdDto = _fixture.Build<UserCreatedDTO>().Create();
+        _fixture
+            .hasherMock.Setup(h => h.HashPassword(createDto.Password))
+            .Returns("hashed_password");
+        User? userIntercepted;
+        _fixture.mapperMock.Setup(m => m.Map<User>(createDto)).Returns(user);
+        _fixture
+            .mapperMock.Setup(m => m.Map<UserCreatedDTO>(user))
+            .Callback(
+                (object interceptedData) =>
+                {
+                    userIntercepted = interceptedData as User;
+                }
+            )
+            .Returns(createdDto);
         var result = await _sut.SignupAsync(createDto);
 
         // Assert
-        Assert.False(result.Success);
-        Assert.Null(result.Data);
-        Assert.Equal(StatusCodes.Status400BadRequest, result.Code);
+        Assert.True(result.Success);
+        Assert.NotNull(result.Data);
+        Assert.Equal(StatusCodes.Status201Created, result.Code);
     }
 
     [Fact]
