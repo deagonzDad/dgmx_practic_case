@@ -82,6 +82,7 @@ public class UserRepository(AppDbContext context) : IUserRepository
                     || EF.Functions.Like(data.Username.ToLower(), filterText)
                 );
             }
+            int totalCount = await usersQuery.CountAsync();
             bool hasSortBy =
                 !string.IsNullOrWhiteSpace(filterParamsDTO.SortBy)
                 && _allowedSortByProperties.Contains(filterParamsDTO.SortBy);
@@ -124,7 +125,7 @@ public class UserRepository(AppDbContext context) : IUserRepository
                 else
                     usersQuery = ((IOrderedQueryable<User>)usersQuery).ThenByDescending(u => u.Id);
             }
-            int totalCount = await usersQuery.CountAsync();
+
             if (
                 !string.IsNullOrWhiteSpace(filterParamsDTO.Cursor)
                 && int.TryParse(filterParamsDTO.Cursor, out int cursorId)

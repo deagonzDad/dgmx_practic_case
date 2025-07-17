@@ -26,9 +26,6 @@ public class TestFixture : Fixture, IDisposable
 
     private readonly DbConnection _connection;
     public AppDbContext DbAppContext { get; }
-
-    // public readonly Mock<IUserRepository> userRepoMock;
-    // public readonly Mock<IRoleRepository> roleRepoMock;
     public readonly IUserRepository userRepo;
     public readonly IRoleRepository roleRepo;
     public readonly Mock<IHasher> hasherMock;
