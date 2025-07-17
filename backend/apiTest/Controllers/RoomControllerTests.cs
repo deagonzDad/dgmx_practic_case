@@ -156,8 +156,8 @@ public class RoomControllerTests : IClassFixture<TestFixture>
         var actionResult = await _sut.CreateRoom(createRoomDto);
 
         // Assert
-        var statusCodeResult = Assert.IsType<ObjectResult>(actionResult.Result);
-        Assert.Equal(StatusCodes.Status500InternalServerError, statusCodeResult.StatusCode);
+        var statusCodeResult = Assert.IsType<BadRequestObjectResult>(actionResult.Result);
+        Assert.Equal(StatusCodes.Status400BadRequest, statusCodeResult.StatusCode);
         _roomServiceMock.Verify(s => s.CreateRoomAsync(It.IsAny<CreateRoomDTO>()), Times.Never);
     }
 
@@ -218,8 +218,8 @@ public class RoomControllerTests : IClassFixture<TestFixture>
         var actionResult = await _sut.UpdateRoomById(roomId, updateDto);
 
         // Assert
-        var statusCodeResult = Assert.IsType<ObjectResult>(actionResult.Result);
-        Assert.Equal(StatusCodes.Status500InternalServerError, statusCodeResult.StatusCode);
+        var statusCodeResult = Assert.IsType<BadRequestObjectResult>(actionResult.Result);
+        Assert.Equal(StatusCodes.Status400BadRequest, statusCodeResult.StatusCode);
         _roomServiceMock.Verify(
             s => s.UpdateRoomAsync(It.IsAny<UpdateRoomDTO>(), It.IsAny<int>()),
             Times.Never

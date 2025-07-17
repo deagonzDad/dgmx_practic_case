@@ -1,5 +1,6 @@
 using api.DTO.ResponseDTO;
 using api.DTO.RoomsDTO;
+using api.Exceptions;
 using api.Models;
 using api.Services;
 using apiTest.Fixtures;
@@ -22,9 +23,9 @@ public class RoomServiceTests : IClassFixture<TestFixture>
         _sut = new RoomService(
             _fixture.DbAppContext,
             _fixture.roomRepo,
-            _fixture.mapperMock.Object,
-            _fixture.errorHandler,
-            _fixture.Create<ILogger<RoomService>>()
+            _fixture.mapperMock.Object
+        // _fixture.errorHandler,
+        // _fixture.Create<ILogger<RoomService>>()
         );
     }
 
@@ -71,12 +72,9 @@ public class RoomServiceTests : IClassFixture<TestFixture>
     {
         var roomId = 999;
 
-        var result = await _sut.GetRoomByIdAsync(roomId);
-
-        // Assert
-        Assert.False(result.Success);
-        Assert.Null(result.Data);
-        Assert.Equal(StatusCodes.Status404NotFound, result.Code);
+        await Assert.ThrowsAsync<RoomNotFoundException>(async () =>
+            await _sut.GetRoomByIdAsync(roomId)
+        );
     }
 
     [Fact]
@@ -121,19 +119,18 @@ public class RoomServiceTests : IClassFixture<TestFixture>
     {
         var roomId = 999;
 
-        var result = await _sut.DeleteRoomAsync(roomId);
-
-        // Assert
-        Assert.False(result.Success);
-        Assert.Equal(StatusCodes.Status404NotFound, result.Code);
+        await Assert.ThrowsAsync<RoomNotFoundException>(async () =>
+            await _sut.DeleteRoomAsync(roomId)
+        );
     }
 
-    [Fact]//TODO: review the test having error in the Asserts
+    [Fact] //TODO: review the test having error in the Asserts
     public async Task GetRoomsAsync_WhenCalled_ReturnsPaginatedData()
     {
         var filterParams = new FilterParamsDTO { Limit = 5 };
         List<Room> allRoomInDb = await _fixture
-            .DbAppContext.Rooms.Where(r=>r.IsActive == true).OrderBy(r => r.Id)
+            .DbAppContext.Rooms.Where(r => r.IsActive == true)
+            .OrderBy(r => r.Id)
             .ToListAsync();
         var expectedTotalCount = allRoomInDb.Count;
         List<Room> expectedPageOfRoom = [.. allRoomInDb.Take(filterParams.Limit)];
@@ -159,7 +156,7 @@ public class RoomServiceTests : IClassFixture<TestFixture>
 
         // Assert
         Assert.Equal(expectedTotalCount, result.TotalRecords);
-        Assert.Equal(expectedNextCursor, string.IsNullOrEmpty(result.Next)? null: result.Next);
+        Assert.Equal(expectedNextCursor, string.IsNullOrEmpty(result.Next) ? null : result.Next);
         Assert.NotNull(result.Data);
         Assert.Null(result.Error);
         // Assert.Equal(filterParams.Limit, result.Data.Count);//uncomment this line if the test have more than the limit of elements

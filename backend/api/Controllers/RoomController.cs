@@ -27,59 +27,29 @@ namespace api.Controllers
             [FromBody] CreateRoomDTO room
         )
         {
-            try
+            if (!ModelState.IsValid)
             {
-                if (!ModelState.IsValid)
-                {
-                    return StatusCode(
-                        StatusCodes.Status500InternalServerError,
-                        new { res = ModelState }
-                    );
-                }
-                ResponseDTO<CreatedRoomDTO?, ErrorDTO?> responseDTO =
-                    await _roomService.CreateRoomAsync(room);
+                return BadRequest(ModelState);
+            }
+            ResponseDTO<CreatedRoomDTO?, ErrorDTO?> responseDTO =
+                await _roomService.CreateRoomAsync(room);
 
-                return CreateResponse(responseDTO);
-            }
-            catch (Exception ex)
-            {
-                string messageError = "Something goes wrong unexpectedly";
-                _logger.LogError(ex, "{messageError}", messageError);
-                return StatusCode(
-                    StatusCodes.Status500InternalServerError,
-                    new { res = ModelState }
-                );
-            }
+            return CreateResponse(responseDTO);
         }
 
-        [HttpPut("/{IdRoom}")]
+        [HttpPut("{IdRoom}")]
         public async Task<ActionResult<ResponseDTO<CreatedRoomDTO?, ErrorDTO?>>> UpdateRoomById(
             int IdRoom,
             [FromBody] UpdateRoomDTO room
         )
         {
-            try
+            if (!ModelState.IsValid)
             {
-                if (!ModelState.IsValid)
-                {
-                    return StatusCode(
-                        StatusCodes.Status500InternalServerError,
-                        new { res = ModelState }
-                    );
-                }
-                ResponseDTO<CreatedRoomDTO?, ErrorDTO?> responseDTO =
-                    await _roomService.UpdateRoomAsync(room, IdRoom);
-                return CreateResponse(responseDTO);
+                return BadRequest(ModelState);
             }
-            catch (Exception ex)
-            {
-                string messageError = "Something goes wrong unexpectedly";
-                _logger.LogError(ex, "{messageError}", messageError);
-                return StatusCode(
-                    StatusCodes.Status500InternalServerError,
-                    new { res = ModelState }
-                );
-            }
+            ResponseDTO<CreatedRoomDTO?, ErrorDTO?> responseDTO =
+                await _roomService.UpdateRoomAsync(room, IdRoom);
+            return CreateResponse(responseDTO);
         }
 
         [HttpGet]
@@ -88,139 +58,59 @@ namespace api.Controllers
             [FromQuery(Name = "token")] string? token
         )
         {
-            try
+            if (!ModelState.IsValid)
             {
-                if (!ModelState.IsValid)
-                {
-                    return StatusCode(
-                        StatusCodes.Status500InternalServerError,
-                        new { res = ModelState }
-                    );
-                }
-                string decrypted = _encrypter.DecryptString(token);
-                encryptedFilter.Cursor = string.IsNullOrEmpty(decrypted) ? null : decrypted;
-                DataListPaginationDTO<CreatedRoomDTO?, ErrorDTO?> responseDTO =
-                    await _roomService.GetRoomsAsync(encryptedFilter);
-                responseDTO.Next = string.IsNullOrEmpty(responseDTO.Next)
-                    ? null
-                    : _encrypter.EncryptString(responseDTO.Next);
-                responseDTO.Previous = string.IsNullOrEmpty(responseDTO.Previous)
-                    ? null
-                    : _encrypter.EncryptString(responseDTO.Previous);
+                return BadRequest(ModelState);
+            }
+            string decrypted = _encrypter.DecryptString(token);
+            encryptedFilter.Cursor = string.IsNullOrEmpty(decrypted) ? null : decrypted;
+            DataListPaginationDTO<CreatedRoomDTO?, ErrorDTO?> responseDTO =
+                await _roomService.GetRoomsAsync(encryptedFilter);
+            responseDTO.Next = string.IsNullOrEmpty(responseDTO.Next)
+                ? null
+                : _encrypter.EncryptString(responseDTO.Next);
+            responseDTO.Previous = string.IsNullOrEmpty(responseDTO.Previous)
+                ? null
+                : _encrypter.EncryptString(responseDTO.Previous);
 
-                return CreateListResponse(responseDTO);
-            }
-            catch (Exception ex)
-            {
-                string messageError = "Something goes wrong unexpectedly";
-                _logger.LogError(ex, "{messageError}", messageError);
-                return StatusCode(
-                    StatusCodes.Status500InternalServerError,
-                    new { res = ModelState }
-                );
-            }
+            return CreateListResponse(responseDTO);
         }
 
-        [HttpGet("/{IdRoom}")]
+        [HttpGet("{IdRoom}")]
         public async Task<ActionResult<ResponseDTO<CreatedRoomDTO?, ErrorDTO?>>> GetRoomById(
             int IdRoom
         )
         {
-            try
+            if (!ModelState.IsValid)
             {
-                if (!ModelState.IsValid)
-                {
-                    return StatusCode(
-                        StatusCodes.Status500InternalServerError,
-                        new { res = ModelState }
-                    );
-                }
-                ResponseDTO<CreatedRoomDTO?, ErrorDTO?> responseDTO =
-                    await _roomService.GetRoomByIdAsync(IdRoom);
-                return CreateResponse(responseDTO);
+                return BadRequest(ModelState);
             }
-            catch (Exception ex)
-            {
-                string messageError = "Something goes wrong unexpectedly";
-                _logger.LogError(ex, "{messageError}", messageError);
-                return StatusCode(
-                    StatusCodes.Status500InternalServerError,
-                    new { res = ModelState }
-                );
-            }
+            ResponseDTO<CreatedRoomDTO?, ErrorDTO?> responseDTO =
+                await _roomService.GetRoomByIdAsync(IdRoom);
+            return CreateResponse(responseDTO);
         }
 
-        // [HttpGet("/TestRoomFilter/")]
-        // public IActionResult GetRoomById()
-        // {
-        //     FilterParamsDTO initialFilter = new()
-        //     {
-        //         Limit = 10,
-        //         SortOrder = 0,
-        //         Cursor = null,
-        //         SortBy = null,
-        //         Filter = null,
-        //     };
-        //     string Output = _encrypter.EncryptString(JsonSerializer.Serialize(initialFilter));
-        //     return Ok(Output);
-        // }
-
-        // [HttpGet("testRoom2")]
-        // public IActionResult Test()
-        // {
-        //     _logger.CustomDebug("this is a message send by API Hotels");
-        //     try
-        //     {
-        //         var testObject = new
-        //         {
-        //             message = "hola",
-        //             value = 42,
-        //             isActive = true,
-        //         };
-        //         return Ok(testObject);
-        //     }
-        //     catch (Exception response)
-        //     {
-        //         return StatusCode(StatusCodes.Status500InternalServerError, new { response });
-        //     }
-        // }
-
         [HttpGet]
-        [Route("/getRoomType")]
+        [Route("getRoomType")]
         public ActionResult<DataListPaginationDTO<RoomTypeDTO?, ErrorDTO?>> GetRoomType()
         {
-            try
+            if (!ModelState.IsValid)
             {
-                if (!ModelState.IsValid)
-                {
-                    return StatusCode(
-                        StatusCodes.Status500InternalServerError,
-                        new { res = ModelState }
-                    );
-                }
-                var enumList = new List<RoomTypeDTO?>();
-                foreach (RoomType type in RoomType.GetValues(typeof(RoomType)))
-                {
-                    enumList.Add(new RoomTypeDTO { Name = type.ToString(), Id = (int)type });
-                }
-                DataListPaginationDTO<RoomTypeDTO?, ErrorDTO?> responseDTO = new()
-                {
-                    Data = enumList,
-                    TotalRecords = enumList.Count,
-                    Next = null,
-                    Previous = null,
-                };
-                return CreateListResponse(responseDTO);
+                return BadRequest(ModelState);
             }
-            catch (Exception ex)
+            var enumList = new List<RoomTypeDTO?>();
+            foreach (RoomType type in RoomType.GetValues(typeof(RoomType)))
             {
-                string MessageError = "Something goes wrong unexpectedly";
-                _logger.LogError(ex, "{MessageError}", MessageError);
-                return StatusCode(
-                    StatusCodes.Status500InternalServerError,
-                    new { res = ModelState }
-                );
+                enumList.Add(new RoomTypeDTO { Name = type.ToString(), Id = (int)type });
             }
+            DataListPaginationDTO<RoomTypeDTO?, ErrorDTO?> responseDTO = new()
+            {
+                Data = enumList,
+                TotalRecords = enumList.Count,
+                Next = null,
+                Previous = null,
+            };
+            return CreateListResponse(responseDTO);
         }
     }
 }
