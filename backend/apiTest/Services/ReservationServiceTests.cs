@@ -1,5 +1,6 @@
 using api.DTO.ReservationsDTO;
 using api.DTO.ResponseDTO;
+using api.Exceptions;
 using api.Models;
 using api.Services;
 using apiTest.Fixtures;
@@ -24,9 +25,9 @@ public class ReservationServiceTests : IClassFixture<TestFixture>
             _fixture.reservationRepo,
             _fixture.paymentRepo,
             _fixture.roomRepo,
-            _fixture.mapperMock.Object,
-            _fixture.errorHandler,
-            _fixture.Create<ILogger<ReservationService>>()
+            _fixture.mapperMock.Object
+        // _fixture.errorHandler,
+        // _fixture.Create<ILogger<ReservationService>>()
         );
     }
 
@@ -95,7 +96,6 @@ public class ReservationServiceTests : IClassFixture<TestFixture>
             .Without(p => p.ReservationId)
             .With(p => p.Id)
             .Create();
-
         var reservationMdl = _fixture
             .Build<Reservation>()
             .With(r => r.Payment, payment)
@@ -108,13 +108,9 @@ public class ReservationServiceTests : IClassFixture<TestFixture>
             .Without(r => r.Payment)
             .With(r => r.Id, 0)
             .Create();
-
-        var result = await _sut.CreateReservationAsync(createDto);
-
-        // Assert
-        Assert.False(result.Success);
-        Assert.Null(result.Data);
-        Assert.Equal(StatusCodes.Status400BadRequest, result.Code);
+        await Assert.ThrowsAsync<RoomNotFoundException>(async () =>
+            await _sut.CreateReservationAsync(createDto)
+        );
     }
 
     [Fact]
@@ -138,13 +134,9 @@ public class ReservationServiceTests : IClassFixture<TestFixture>
     public async Task GetReservationByIdAsync_WhenReservationDoesNotExist_ReturnsErrorResponse()
     {
         var reservationId = 999;
-
-        var result = await _sut.GetReservationByIdAsync(reservationId);
-
-        // Assert
-        Assert.False(result.Success);
-        Assert.Null(result.Data);
-        Assert.Equal(StatusCodes.Status404NotFound, result.Code);
+        await Assert.ThrowsAsync<ReservationNotFoundException>(async () =>
+            await _sut.GetReservationByIdAsync(reservationId)
+        );
     }
 
     [Fact]

@@ -11,35 +11,19 @@ using AutoMapper;
 
 namespace api.Services;
 
-public class ReservationService : IReservationService
+public class ReservationService(
+    AppDbContext dbContext,
+    IReservationRepository reservationRepository,
+    IPaymentRepository paymentRepository,
+    IRoomRepository roomRepository,
+    IMapper mapper
+) : IReservationService
 {
-    private readonly IReservationRepository _reservationRepository;
-    private readonly IPaymentRepository _paymentRepository;
-    private readonly IRoomRepository _roomRepository;
-    private readonly IMapper _mapper;
-    private readonly ILogger<ReservationService> _logger;
-    private readonly IErrorHandler _errorHandler;
-    private readonly AppDbContext _dbContext;
-
-    public ReservationService(
-        AppDbContext dbContext,
-        IReservationRepository reservationRepository,
-        IPaymentRepository paymentRepository,
-        IRoomRepository roomRepository,
-        IMapper mapper,
-        IErrorHandler errorHandler,
-        ILogger<ReservationService> logger
-    )
-    {
-        _dbContext = dbContext;
-        _reservationRepository = reservationRepository;
-        _paymentRepository = paymentRepository;
-        _roomRepository = roomRepository;
-        _mapper = mapper;
-        _errorHandler = errorHandler;
-        _logger = logger;
-        errorHandler.InitService("RESERVATION", "RESERVATION_ERROR");
-    }
+    private readonly IReservationRepository _reservationRepository = reservationRepository;
+    private readonly IPaymentRepository _paymentRepository = paymentRepository;
+    private readonly IRoomRepository _roomRepository = roomRepository;
+    private readonly IMapper _mapper = mapper;
+    private readonly AppDbContext _dbContext = dbContext;
 
     public async Task<ResponseDTO<CreatedReservationListDTO?, ErrorDTO?>> CreateReservationAsync(
         CreateReservationDTO reservation
@@ -68,34 +52,10 @@ public class ReservationService : IReservationService
             responseDTO.Success = true;
             return responseDTO;
         }
-        catch (RoomNotFoundException ex)
+        catch (Exception)
         {
             await transaction.RollbackAsync();
-            return _errorHandler.CreateErrorRes(
-                ex,
-                responseDTO,
-                "Room not found",
-                "Room not found doesn't exist",
-                StatusCodes.Status400BadRequest,
-                _logger,
-                false
-            );
-        }
-        catch (UpdateException ex)
-        {
-            await transaction.RollbackAsync();
-            return _errorHandler.CreateErrorRes(
-                ex,
-                responseDTO,
-                "An error occurred while processing your request.",
-                "Database error in room creation",
-                StatusCodes.Status400BadRequest,
-                _logger
-            );
-        }
-        finally
-        {
-            await transaction.DisposeAsync();
+            throw;
         }
     }
 
@@ -118,16 +78,9 @@ public class ReservationService : IReservationService
             responseDTO.Success = true;
             return responseDTO;
         }
-        catch (ReservationNotFoundException ex)
+        catch (Exception)
         {
-            return _errorHandler.CreateErrorRes(
-                ex,
-                responseDTO,
-                "Reservation Not Found",
-                "Reservation not found in the database",
-                StatusCodes.Status404NotFound,
-                _logger
-            );
+            throw;
         }
     }
 
@@ -140,36 +93,15 @@ public class ReservationService : IReservationService
         {
             (List<CreatedReservationListDTO> dataList, int? nextCursor, int totalCount) =
                 await _reservationRepository.GetReservations(filterParams);
-            // List<CreatedReservationListDTO> reservationsMap = _mapper.Map<
-            //     List<CreatedReservationListDTO>
-            // >(query);
             responseDTO.Data = dataList!;
             responseDTO.TotalRecords = totalCount;
             responseDTO.Next = nextCursor.ToString();
             responseDTO.Previous = filterParams.Cursor;
             return responseDTO;
         }
-        catch (RoomNotFoundException ex)
+        catch (Exception)
         {
-            return _errorHandler.CreateErrorListRes(
-                ex,
-                responseDTO,
-                "Room not found.",
-                "Room not found in the database",
-                StatusCodes.Status404NotFound,
-                _logger
-            );
-        }
-        catch (UnauthorizedActionException ex)
-        {
-            return _errorHandler.CreateErrorListRes(
-                ex,
-                responseDTO,
-                "Room not found",
-                "Room not found in the database",
-                StatusCodes.Status403Forbidden,
-                _logger
-            );
+            throw;
         }
     }
 }
