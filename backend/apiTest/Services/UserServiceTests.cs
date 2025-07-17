@@ -22,10 +22,10 @@ public class UserServiceTests : IClassFixture<TestFixture>
     {
         _fixture = fixture;
         _sut = new UserService(
-            _fixture.DbAppContext,
+            // _fixture.DbAppContext,
             _fixture.mapperMock.Object,
-            _fixture.Create<ILogger<UserService>>(),
-            _fixture.errorHandler,
+            // _fixture.Create<ILogger<UserService>>(),
+            // _fixture.errorHandler,
             _fixture.userRepo
         );
     }
@@ -93,10 +93,10 @@ public class UserServiceTests : IClassFixture<TestFixture>
         _fixture.mapperMock.Setup(m => m.Map<List<UserCreatedDTO>>(users)).Returns([]);
 
         var sut = new UserService(
-            _fixture.DbAppContext,
+            // _fixture.DbAppContext,
             _fixture.mapperMock.Object,
-            _fixture.Create<ILogger<UserService>>(),
-            _fixture.errorHandler,
+            // _fixture.Create<ILogger<UserService>>(),
+            // _fixture.errorHandler,
             userRepoMock.Object
         );
 
@@ -120,20 +120,9 @@ public class UserServiceTests : IClassFixture<TestFixture>
             .Setup(r => r.GetUsersAsync(filterParams))
             .ThrowsAsync(new UserNotFoundException(null));
 
-        var sut = new UserService(
-            _fixture.DbAppContext,
-            _fixture.mapperMock.Object,
-            _fixture.Create<ILogger<UserService>>(),
-            _fixture.errorHandler,
-            userRepoMock.Object
+        var sut = new UserService(_fixture.mapperMock.Object, userRepoMock.Object);
+        await Assert.ThrowsAsync<UserNotFoundException>(async () =>
+            await sut.GetUsersAsync(filterParams)
         );
-
-        // Act
-        var result = await sut.GetUsersAsync(filterParams);
-
-        // Assert
-        Assert.Empty(result.Data);
-        Assert.NotNull(result.Error);
-        Assert.Equal(StatusCodes.Status404NotFound, result.Error.ApiErrorCode);
     }
 }
