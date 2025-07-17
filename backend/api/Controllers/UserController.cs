@@ -33,12 +33,8 @@ namespace api.Controllers
             try
             {
                 if (!ModelState.IsValid)
-                {
-                    return StatusCode(
-                        StatusCodes.Status500InternalServerError,
-                        new { res = ModelState }
-                    );
-                }
+                    return BadRequest(ModelState);
+
                 string decrypted = _encrypter.DecryptString(token);
                 encryptedFilter.Cursor = !string.IsNullOrEmpty(decrypted) ? decrypted : null;
                 DataListPaginationDTO<UserCreatedDTO?, ErrorDTO?> responseDTO =

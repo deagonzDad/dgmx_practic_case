@@ -31,12 +31,7 @@ namespace api.Controllers
             try
             {
                 if (!ModelState.IsValid)
-                {
-                    return StatusCode(
-                        StatusCodes.Status500InternalServerError,
-                        new { res = ModelState }
-                    );
-                }
+                    return BadRequest(ModelState);
                 ResponseDTO<CreatedReservationListDTO?, ErrorDTO?> responseDTO =
                     await _reservationService.CreateReservationAsync(reservation);
                 return CreateResponse(responseDTO);
