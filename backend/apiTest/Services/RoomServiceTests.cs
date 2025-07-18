@@ -12,20 +12,18 @@ using Moq;
 
 namespace apiTest.Services;
 
-public class RoomServiceTests : IClassFixture<TestFixture>
+public class RoomServiceTests
 {
     private readonly TestFixture _fixture;
     private readonly RoomService _sut;
 
-    public RoomServiceTests(TestFixture fixture)
+    public RoomServiceTests()
     {
-        _fixture = fixture;
+        _fixture = new TestFixture();
         _sut = new RoomService(
             _fixture.DbAppContext,
             _fixture.roomRepo,
             _fixture.mapperMock.Object
-        // _fixture.errorHandler,
-        // _fixture.Create<ILogger<RoomService>>()
         );
     }
 
