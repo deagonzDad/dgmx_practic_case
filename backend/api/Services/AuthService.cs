@@ -67,6 +67,15 @@ public class AuthService(
             Success = false,
             Message = "",
         };
+
+        var existingUser =
+            await _userRepository.GetUserByEmailOrUsernameAsync(userDTO.Email)
+            ?? await _userRepository.GetUserByEmailOrUsernameAsync(userDTO.Username);
+        if (existingUser != null)
+        {
+            throw new AlreadyExistException(null);
+        }
+
         using var transaction = await _dbContext.Database.BeginTransactionAsync();
         try
         {
