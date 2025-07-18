@@ -68,10 +68,11 @@ public class AuthService(
             Message = "",
         };
 
-        var existingUser =
-            await _userRepository.GetUserByEmailOrUsernameAsync(userDTO.Email)
-            ?? await _userRepository.GetUserByEmailOrUsernameAsync(userDTO.Username);
-        if (existingUser != null)
+        bool existingUser = await _userRepository.UsernameOrEmailExistsAsync(
+            userDTO.Email,
+            userDTO.Username
+        );
+        if (existingUser)
         {
             throw new AlreadyExistException(null);
         }

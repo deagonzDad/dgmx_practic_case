@@ -41,6 +41,11 @@ public class UserRepository(AppDbContext context) : IUserRepository
         return user;
     }
 
+    public async Task<bool> UsernameOrEmailExistsAsync(string email, string username)
+    {
+        return await _context.Users.AnyAsync(r => r.Email == email || r.Username == username);
+    }
+
     public async Task<User> GetUserByEmailAsync(string email)
     {
         User user =
