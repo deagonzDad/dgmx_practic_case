@@ -1,4 +1,3 @@
-#this editor don't work because it use CSSharpierCode - Code Formatter
 root = true
 [*.{cs,vb}]
 
