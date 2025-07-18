@@ -14,7 +14,7 @@ using Moq;
 
 namespace apiTest.Controllers;
 
-public class ReservationsControllerTests : IClassFixture<TestFixture>
+public class ReservationsControllerTests
 {
     private readonly TestFixture _fixture;
     private readonly ReservationController _sut;
@@ -22,9 +22,9 @@ public class ReservationsControllerTests : IClassFixture<TestFixture>
     private readonly Mock<ILogger<ReservationController>> _loggerMock;
     private readonly Mock<IEncrypter> _encrypterMock;
 
-    public ReservationsControllerTests(TestFixture fixture)
+    public ReservationsControllerTests()
     {
-        _fixture = fixture;
+        _fixture = new TestFixture();
         _reservationServiceMock = _fixture.Freeze<Mock<IReservationService>>();
         _loggerMock = _fixture.Freeze<Mock<ILogger<ReservationController>>>();
         _encrypterMock = _fixture.Freeze<Mock<IEncrypter>>();
@@ -113,8 +113,8 @@ public class ReservationsControllerTests : IClassFixture<TestFixture>
         var actionResult = await _sut.CreateReservation(createDto);
 
         // Assert
-        var statusCodeResult = Assert.IsType<ObjectResult>(actionResult.Result);
-        Assert.Equal(StatusCodes.Status500InternalServerError, statusCodeResult.StatusCode);
+        var statusCodeResult = Assert.IsType<BadRequestObjectResult>(actionResult.Result);
+        Assert.Equal(StatusCodes.Status400BadRequest, statusCodeResult.StatusCode);
         _reservationServiceMock.Verify(
             s => s.CreateReservationAsync(It.IsAny<CreateReservationDTO>()),
             Times.Never

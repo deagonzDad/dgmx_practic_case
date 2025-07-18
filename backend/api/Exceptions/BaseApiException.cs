@@ -53,3 +53,21 @@ public class AlreadyExistException : BaseApiException
         LogError = logError;
     }
 }
+
+public class InvalidCredentialsException : BaseApiException
+{
+    private new const int ErrorCode = 400;
+    private new const string Message = "Invalid credentials";
+
+    public InvalidCredentialsException(Exception? logError)
+        : base(Message, ErrorCode)
+    {
+        LogError = logError;
+    }
+
+    public InvalidCredentialsException(Exception? logError, string message)
+        : base(message, ErrorCode)
+    {
+        LogError = logError;
+    }
+}

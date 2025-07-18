@@ -1,15 +1,13 @@
-using api.Data;
 using api.DTO.ReservationsDTO;
 using api.DTO.ResponseDTO;
 using api.Exceptions;
 using api.Models;
-using api.Repository.Interfaces;
 using api.Services;
 using apiTest.Fixtures;
 using AutoFixture;
-using AutoMapper;
 using Microsoft.AspNetCore.Http;
-using Microsoft.EntityFrameworkCore.Storage;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 using Moq;
 
 namespace apiTest.Services;
@@ -18,52 +16,59 @@ public class ReservationServiceTests : IClassFixture<TestFixture>
 {
     private readonly TestFixture _fixture;
     private readonly ReservationService _sut;
-    private readonly Mock<IReservationRepository> _reservationRepoMock;
-    private readonly Mock<IPaymentRepository> _paymentRepoMock;
-    private readonly Mock<IRoomRepository> _roomRepoMock;
-    private readonly Mock<IMapper> _mapperMock;
-    private readonly Mock<AppDbContext> _dbContextMock;
-    private readonly Mock<IDbContextTransaction> _transactionMock;
 
     public ReservationServiceTests(TestFixture fixture)
     {
         _fixture = fixture;
-        _reservationRepoMock = _fixture.Freeze<Mock<IReservationRepository>>();
-        _paymentRepoMock = _fixture.Freeze<Mock<IPaymentRepository>>();
-        _roomRepoMock = _fixture.Freeze<Mock<IRoomRepository>>();
-        _mapperMock = _fixture.Freeze<Mock<IMapper>>();
-        _dbContextMock = _fixture.Freeze<Mock<AppDbContext>>();
-        _transactionMock = _fixture.Freeze<Mock<IDbContextTransaction>>();
-
-        _dbContextMock
-            .Setup(db => db.Database.BeginTransactionAsync(It.IsAny<CancellationToken>()))
-            .ReturnsAsync(_transactionMock.Object);
-
-        _sut = _fixture.Create<ReservationService>();
+        _sut = new ReservationService(
+            _fixture.DbAppContext,
+            _fixture.reservationRepo,
+            _fixture.paymentRepo,
+            _fixture.roomRepo,
+            _fixture.mapperMock.Object
+        // _fixture.errorHandler,
+        // _fixture.Create<ILogger<ReservationService>>()
+        );
     }
 
     [Fact]
     public async Task CreateReservationAsync_WhenSuccessful_ReturnsCreatedReservation()
     {
-        // Arrange
-        var createDto = _fixture.Create<CreateReservationDTO>();
-        var roomPrice = _fixture.Create<decimal>();
-        var payment = _fixture.Create<Payment>();
-        var paymentCreated = _fixture.Create<Payment>();
-        var reservationMdl = _fixture.Create<Reservation>();
+        var room = await _fixture.DbAppContext.Rooms.FirstAsync();
+        var user = await _fixture.DbAppContext.Users.FirstAsync();
+        var createDto = _fixture
+            .Build<CreateReservationDTO>()
+            .With(r => r.RoomId, room.Id)
+            .With(r => r.ClientId, user.Id)
+            .Create();
+
+        var payment = _fixture
+            .Build<Payment>()
+            .With(p => p.AmountPerNight, room.PricePerNight)
+            .Without(p => p.Reservation)
+            .Without(p => p.ReservationId)
+            .With(p => p.Id)
+            .Create();
+
+        var reservationMdl = _fixture
+            .Build<Reservation>()
+            .With(r => r.Payment, payment)
+            .With(r => r.RoomId, room.Id)
+            .With(r => r.UserId, user.Id)
+            .Without(r => r.Payment)
+            .Without(r => r.PaymentId)
+            .Without(r => r.User)
+            .Without(r => r.Room)
+            .Without(r => r.Payment)
+            .With(r => r.Id, 0)
+            .Create();
+
         var createdDto = _fixture.Create<CreatedReservationListDTO>();
 
-        _roomRepoMock.Setup(r => r.GetPriceByIdAsync(createDto.RoomId)).ReturnsAsync(roomPrice);
-        _mapperMock.Setup(m => m.Map<Payment>(createDto)).Returns(payment);
-        _paymentRepoMock
-            .Setup(p => p.CreatePaymentAsync(payment))
-            .ReturnsAsync((true, paymentCreated));
-        _mapperMock.Setup(m => m.Map<Reservation>(createDto)).Returns(reservationMdl);
-        _reservationRepoMock
-            .Setup(r => r.CreateReservationAsync(reservationMdl))
-            .Returns(Task.CompletedTask);
-        _mapperMock
-            .Setup(m => m.Map<CreatedReservationListDTO>(reservationMdl))
+        _fixture.mapperMock.Setup(m => m.Map<Payment>(createDto)).Returns(payment);
+        _fixture.mapperMock.Setup(m => m.Map<Reservation>(createDto)).Returns(reservationMdl);
+        _fixture
+            .mapperMock.Setup(m => m.Map<CreatedReservationListDTO>(reservationMdl))
             .Returns(createdDto);
 
         // Act
@@ -72,43 +77,53 @@ public class ReservationServiceTests : IClassFixture<TestFixture>
         // Assert
         Assert.True(result.Success);
         Assert.Equal(createdDto, result.Data);
-        _transactionMock.Verify(t => t.CommitAsync(It.IsAny<CancellationToken>()), Times.Once);
     }
 
     [Fact]
-    public async Task CreateReservationAsync_WhenDbUpdateFails_ReturnsErrorResponse()
+    public async Task CreateReservationAsync_WhenRoomDoesNotExist_ReturnsErrorResponse()
     {
-        // Arrange
-        var createDto = _fixture.Create<CreateReservationDTO>();
-        _roomRepoMock
-            .Setup(r => r.GetPriceByIdAsync(createDto.RoomId))
-            .ThrowsAsync(new UpdateException(null, "DB error"));
-
-        // Act
-        var result = await _sut.CreateReservationAsync(createDto);
-
-        // Assert
-        Assert.False(result.Success);
-        Assert.Null(result.Data);
-        Assert.Equal(StatusCodes.Status400BadRequest, result.Code);
-        _transactionMock.Verify(t => t.RollbackAsync(It.IsAny<CancellationToken>()), Times.Once);
+        var room = await _fixture.DbAppContext.Rooms.FirstAsync();
+        var user = await _fixture.DbAppContext.Users.FirstAsync();
+        var createDto = _fixture
+            .Build<CreateReservationDTO>()
+            .With(r => r.ClientId, user.Id)
+            .With(r => r.RoomId, 999)
+            .Create();
+        var payment = _fixture
+            .Build<Payment>()
+            .With(p => p.AmountPerNight, room.PricePerNight)
+            .Without(p => p.Reservation)
+            .Without(p => p.ReservationId)
+            .With(p => p.Id)
+            .Create();
+        var reservationMdl = _fixture
+            .Build<Reservation>()
+            .With(r => r.Payment, payment)
+            .With(r => r.RoomId, 999)
+            .With(r => r.UserId, user.Id)
+            .Without(r => r.Payment)
+            .Without(r => r.PaymentId)
+            .Without(r => r.User)
+            .Without(r => r.Room)
+            .Without(r => r.Payment)
+            .With(r => r.Id, 0)
+            .Create();
+        await Assert.ThrowsAsync<RoomNotFoundException>(async () =>
+            await _sut.CreateReservationAsync(createDto)
+        );
     }
 
     [Fact]
     public async Task GetReservationByIdAsync_WhenReservationExists_ReturnsReservation()
     {
-        // Arrange
-        var reservationId = _fixture.Create<int>();
-        var reservation = _fixture.Create<Reservation>();
+        var reservation = await _fixture.DbAppContext.Reservations.FirstAsync();
         var createdDto = _fixture.Create<CreatedReservationDTO>();
 
-        _reservationRepoMock
-            .Setup(r => r.GetReservationByIdAsync(reservationId))
-            .ReturnsAsync(reservation);
-        _mapperMock.Setup(m => m.Map<CreatedReservationDTO>(reservation)).Returns(createdDto);
+        _fixture
+            .mapperMock.Setup(m => m.Map<CreatedReservationDTO>(reservation))
+            .Returns(createdDto);
 
-        // Act
-        var result = await _sut.GetReservationByIdAsync(reservationId);
+        var result = await _sut.GetReservationByIdAsync(reservation.Id);
 
         // Assert
         Assert.True(result.Success);
@@ -118,40 +133,36 @@ public class ReservationServiceTests : IClassFixture<TestFixture>
     [Fact]
     public async Task GetReservationByIdAsync_WhenReservationDoesNotExist_ReturnsErrorResponse()
     {
-        // Arrange
-        var reservationId = _fixture.Create<int>();
-        _reservationRepoMock
-            .Setup(r => r.GetReservationByIdAsync(reservationId))
-            .ThrowsAsync(new ReservationNotFoundException(null));
-
-        // Act
-        var result = await _sut.GetReservationByIdAsync(reservationId);
-
-        // Assert
-        Assert.False(result.Success);
-        Assert.Null(result.Data);
-        Assert.Equal(StatusCodes.Status404NotFound, result.Code);
+        var reservationId = 999;
+        await Assert.ThrowsAsync<ReservationNotFoundException>(async () =>
+            await _sut.GetReservationByIdAsync(reservationId)
+        );
     }
 
     [Fact]
     public async Task GetReservationsAsync_WhenCalled_ReturnsPaginatedData()
     {
-        // Arrange
-        var filterParams = _fixture.Create<FilterParamsDTO>();
-        var dataList = _fixture.CreateMany<CreatedReservationListDTO>(5).ToList();
-        var nextCursor = _fixture.Create<int>();
-        var totalCount = _fixture.Create<int>();
+        FilterParamsDTO filterParams = new() { Limit = 5 };
+        List<Reservation> allReservationsInDb = await _fixture
+            .DbAppContext.Reservations.OrderBy(r => r.Id)
+            .ToListAsync();
+        var expectedTotalCount = allReservationsInDb.Count;
+        List<Reservation> expectedPageOfReservations =
+        [
+            .. allReservationsInDb.Take(filterParams.Limit),
+        ];
+        string expectedNextCursor = expectedPageOfReservations.Last().Id.ToString();
 
-        _reservationRepoMock
-            .Setup(r => r.GetReservations(filterParams))
-            .ReturnsAsync((dataList, nextCursor, totalCount));
-
-        // Act
         var result = await _sut.GetReservationsAsync(filterParams);
 
         // Assert
-        Assert.Equal(dataList, result.Data!);
-        Assert.Equal(totalCount, result.TotalRecords);
-        Assert.Equal(nextCursor.ToString(), result.Next);
+        Assert.Equal(expectedTotalCount, result.TotalRecords);
+        Assert.Equal(expectedNextCursor, result.Next!.ToString());
+        Assert.Null(result.Error);
+        Assert.NotNull(result.Data);
+        Assert.Equal(filterParams.Limit, result.Data.Count);
+        var expectedIds = expectedPageOfReservations.Select(r => r.Id);
+        var actualIds = result.Data.Select(r => r!.ReservationId);
+        Assert.Equal(expectedIds, actualIds);
     }
 }

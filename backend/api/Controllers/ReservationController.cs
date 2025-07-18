@@ -28,28 +28,11 @@ namespace api.Controllers
             ActionResult<ResponseDTO<CreatedReservationListDTO?, ErrorDTO?>>
         > CreateReservation([FromBody] CreateReservationDTO reservation)
         {
-            try
-            {
-                if (!ModelState.IsValid)
-                {
-                    return StatusCode(
-                        StatusCodes.Status500InternalServerError,
-                        new { res = ModelState }
-                    );
-                }
-                ResponseDTO<CreatedReservationListDTO?, ErrorDTO?> responseDTO =
-                    await _reservationService.CreateReservationAsync(reservation);
-                return CreateResponse(responseDTO);
-            }
-            catch (Exception ex)
-            {
-                string messageError = "Something goes wrong unexpectedly";
-                _logger.LogError(ex, "{messageError}", messageError);
-                return StatusCode(
-                    StatusCodes.Status500InternalServerError,
-                    new { res = ModelState }
-                );
-            }
+            if (!ModelState.IsValid)
+                return BadRequest(ModelState);
+            ResponseDTO<CreatedReservationListDTO?, ErrorDTO?> responseDTO =
+                await _reservationService.CreateReservationAsync(reservation);
+            return CreateResponse(responseDTO);
         }
 
         [HttpGet]
@@ -60,36 +43,19 @@ namespace api.Controllers
             [FromQuery(Name = "token")] string? token
         )
         {
-            try
-            {
-                if (!ModelState.IsValid)
-                {
-                    return StatusCode(
-                        StatusCodes.Status500InternalServerError,
-                        new { res = ModelState }
-                    );
-                }
-                string decrypted = _encrypter.DecryptString(token);
-                encryptedFilter.Cursor = string.IsNullOrEmpty(decrypted) ? null : decrypted;
-                DataListPaginationDTO<CreatedReservationListDTO?, ErrorDTO?> responseDTO =
-                    await _reservationService.GetReservationsAsync(encryptedFilter);
-                responseDTO.Next = string.IsNullOrEmpty(responseDTO.Next)
-                    ? null
-                    : _encrypter.EncryptString(responseDTO.Next);
-                responseDTO.Previous = string.IsNullOrEmpty(responseDTO.Previous)
-                    ? null
-                    : _encrypter.EncryptString(responseDTO.Previous);
-                return CreateListResponse(responseDTO);
-            }
-            catch (Exception ex)
-            {
-                string messageError = "Something goes wrong unexpectedly";
-                _logger.LogError(ex, "{messageError}", messageError);
-                return StatusCode(
-                    StatusCodes.Status500InternalServerError,
-                    new { res = ModelState }
-                );
-            }
+            if (!ModelState.IsValid)
+                return BadRequest(ModelState);
+            string decrypted = _encrypter.DecryptString(token);
+            encryptedFilter.Cursor = string.IsNullOrEmpty(decrypted) ? null : decrypted;
+            DataListPaginationDTO<CreatedReservationListDTO?, ErrorDTO?> responseDTO =
+                await _reservationService.GetReservationsAsync(encryptedFilter);
+            responseDTO.Next = string.IsNullOrEmpty(responseDTO.Next)
+                ? null
+                : _encrypter.EncryptString(responseDTO.Next);
+            responseDTO.Previous = string.IsNullOrEmpty(responseDTO.Previous)
+                ? null
+                : _encrypter.EncryptString(responseDTO.Previous);
+            return CreateListResponse(responseDTO);
         }
 
         [HttpGet("{IdRes}")]
@@ -97,28 +63,11 @@ namespace api.Controllers
             ActionResult<ResponseDTO<CreatedReservationDTO?, ErrorDTO?>>
         > GetReservationById([FromRoute(Name = "IdRes")] int IdReservation)
         {
-            try
-            {
-                // if (!ModelState.IsValid)
-                // {
-                //     return StatusCode(
-                //         StatusCodes.Status500InternalServerError,
-                //         new { res = ModelState }
-                //     );
-                // }
-                ResponseDTO<CreatedReservationDTO?, ErrorDTO?> responseDTO =
-                    await _reservationService.GetReservationByIdAsync(IdReservation);
-                return CreateResponse(responseDTO);
-            }
-            catch (Exception ex)
-            {
-                string messageError = "Something goes wrong unexpectedly";
-                _logger.LogError(ex, "{messageError}", messageError);
-                return StatusCode(
-                    StatusCodes.Status500InternalServerError,
-                    new { res = ModelState }
-                );
-            }
+            if (!ModelState.IsValid)
+                return BadRequest(ModelState);
+            ResponseDTO<CreatedReservationDTO?, ErrorDTO?> responseDTO =
+                await _reservationService.GetReservationByIdAsync(IdReservation);
+            return CreateResponse(responseDTO);
         }
     }
 }

@@ -1,9 +1,5 @@
-using System;
-using api.Data;
 using api.DTO.ResponseDTO;
 using api.DTO.UsersDTO;
-using api.Exceptions;
-using api.Helpers.Instances;
 using api.Models;
 using api.Repository.Interfaces;
 using api.Services.Interfaces;
@@ -11,29 +7,11 @@ using AutoMapper;
 
 namespace api.Services;
 
-public class UserService : IUserService
+public class UserService(IMapper mapper, IUserRepository userRepository) : IUserService
 {
-    private readonly AppDbContext _context;
-    private readonly IMapper _mapper;
-    private readonly ILogger<UserService> _logger;
-    private readonly IErrorHandler _errorHandler;
-    private readonly IUserRepository _userRepository;
+    private readonly IMapper _mapper = mapper;
 
-    public UserService(
-        AppDbContext context,
-        IMapper mapper,
-        ILogger<UserService> logger,
-        IErrorHandler errorHandler,
-        IUserRepository userRepository
-    )
-    {
-        _context = context;
-        _mapper = mapper;
-        _logger = logger;
-        _errorHandler = errorHandler;
-        _userRepository = userRepository;
-        errorHandler.InitService("USER", "USER_ERROR");
-    }
+    private readonly IUserRepository _userRepository = userRepository;
 
     public async Task<DataListPaginationDTO<UserCreatedDTO?, ErrorDTO?>> GetUsersAsync(
         FilterParamsDTO filterParams
@@ -51,16 +29,9 @@ public class UserService : IUserService
             responseDTO.TotalRecords = totalCount;
             return responseDTO;
         }
-        catch (UserNotFoundException ex)
+        catch (Exception)
         {
-            return _errorHandler.CreateErrorListRes(
-                ex,
-                responseDTO,
-                "User not found.",
-                "User not found in the database",
-                StatusCodes.Status404NotFound,
-                _logger
-            );
+            throw;
         }
     }
 }

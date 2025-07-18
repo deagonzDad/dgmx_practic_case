@@ -13,29 +13,12 @@ using Microsoft.EntityFrameworkCore.Storage;
 
 namespace api.Services;
 
-public class RoomService : IRoomService
+public class RoomService(AppDbContext dbContext, IRoomRepository roomRepository, IMapper mapper)
+    : IRoomService
 {
-    private readonly IRoomRepository _roomRepository;
-    private readonly IMapper _mapper;
-    private readonly IErrorHandler _errorHandler;
-    private readonly ILogger<RoomService> _logger;
-    private readonly AppDbContext _dbContext;
-
-    public RoomService(
-        AppDbContext dbContext,
-        IRoomRepository roomRepository,
-        IMapper mapper,
-        IErrorHandler errorHandler,
-        ILogger<RoomService> logger
-    )
-    {
-        _dbContext = dbContext;
-        _roomRepository = roomRepository;
-        _mapper = mapper;
-        _errorHandler = errorHandler;
-        _logger = logger;
-        _errorHandler.InitService("ROOM", "ROOM_ERROR");
-    }
+    private readonly IRoomRepository _roomRepository = roomRepository;
+    private readonly IMapper _mapper = mapper;
+    private readonly AppDbContext _dbContext = dbContext;
 
     public async Task<ResponseDTO<CreatedRoomDTO?, ErrorDTO?>> CreateRoomAsync(
         CreateRoomDTO roomDTO
@@ -62,21 +45,9 @@ public class RoomService : IRoomService
             responseDTO.Success = true;
             return responseDTO;
         }
-        catch (UpdateException ex)
+        catch (Exception)
         {
-            await transaction.RollbackAsync();
-            return _errorHandler.CreateErrorRes(
-                ex,
-                responseDTO,
-                "An error occurred while processing your request.",
-                "Database error in room creation",
-                StatusCodes.Status400BadRequest,
-                _logger
-            );
-        }
-        finally
-        {
-            await transaction.DisposeAsync();
+            throw;
         }
     }
 
@@ -96,27 +67,9 @@ public class RoomService : IRoomService
             responseDTO.Previous = filterParams.Cursor;
             return responseDTO;
         }
-        catch (RoomNotFoundException ex)
+        catch (Exception)
         {
-            return _errorHandler.CreateErrorListRes(
-                ex,
-                responseDTO,
-                "Room not found.",
-                "Room not found in the database",
-                StatusCodes.Status404NotFound,
-                _logger
-            );
-        }
-        catch (UnauthorizedActionException ex)
-        {
-            return _errorHandler.CreateErrorListRes(
-                ex,
-                responseDTO,
-                "Room not found",
-                "Room not found in the database",
-                StatusCodes.Status403Forbidden,
-                _logger
-            );
+            throw;
         }
     }
 
@@ -140,16 +93,9 @@ public class RoomService : IRoomService
             responseDTO.Success = true;
             return responseDTO;
         }
-        catch (UpdateException ex)
+        catch (Exception)
         {
-            return _errorHandler.CreateErrorRes(
-                ex,
-                responseDTO,
-                "An error occurred while processing your request.",
-                "Database error in room creation",
-                StatusCodes.Status400BadRequest,
-                _logger
-            );
+            throw;
         }
     }
 
@@ -166,21 +112,10 @@ public class RoomService : IRoomService
             responseDTO.Success = true;
             return responseDTO;
         }
-        catch (RoomNotFoundException ex)
+        catch (Exception)
         {
             await transaction.RollbackAsync();
-            return _errorHandler.CreateErrorRes(
-                ex,
-                responseDTO,
-                "Room not found",
-                "Room not found in the database",
-                StatusCodes.Status404NotFound,
-                _logger
-            );
-        }
-        finally
-        {
-            await transaction.DisposeAsync();
+            throw;
         }
     }
 
@@ -199,16 +134,9 @@ public class RoomService : IRoomService
             responseDTO.Success = true;
             return responseDTO;
         }
-        catch (RoomNotFoundException ex)
+        catch (Exception)
         {
-            return _errorHandler.CreateErrorRes(
-                ex,
-                responseDTO,
-                "Room Not Found",
-                "Room not found in the database",
-                StatusCodes.Status404NotFound,
-                _logger
-            );
+            throw;
         }
     }
 }

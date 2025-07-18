@@ -71,6 +71,7 @@ try
 
     app.UseHttpsRedirection();
 
+    app.UseMiddleware<GlobalExceptionHandler>();
     app.UseMiddleware<RequestLogContextMiddleware>();
     //add support to logging request with Serilog
     app.UseSerilogRequestLogging();

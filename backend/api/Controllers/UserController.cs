@@ -30,36 +30,20 @@ namespace api.Controllers
             [FromQuery(Name = "token")] string? token
         )
         {
-            try
-            {
-                if (!ModelState.IsValid)
-                {
-                    return StatusCode(
-                        StatusCodes.Status500InternalServerError,
-                        new { res = ModelState }
-                    );
-                }
-                string decrypted = _encrypter.DecryptString(token);
-                encryptedFilter.Cursor = !string.IsNullOrEmpty(decrypted) ? decrypted : null;
-                DataListPaginationDTO<UserCreatedDTO?, ErrorDTO?> responseDTO =
-                    await _userService.GetUsersAsync(encryptedFilter);
-                responseDTO.Next = !string.IsNullOrEmpty(responseDTO.Next)
-                    ? _encrypter.EncryptString(responseDTO.Next)
-                    : null;
-                responseDTO.Previous = !string.IsNullOrEmpty(responseDTO.Previous)
-                    ? _encrypter.EncryptString(responseDTO.Previous)
-                    : null;
-                return CreateListResponse(responseDTO);
-            }
-            catch (Exception ex)
-            {
-                string messageError = "Something goes wrong unexpectedly";
-                _logger.LogError(ex, "{messageError}", messageError);
-                return StatusCode(
-                    StatusCodes.Status500InternalServerError,
-                    new { res = ModelState }
-                );
-            }
+            if (!ModelState.IsValid)
+                return BadRequest(ModelState);
+
+            string decrypted = _encrypter.DecryptString(token);
+            encryptedFilter.Cursor = !string.IsNullOrEmpty(decrypted) ? decrypted : null;
+            DataListPaginationDTO<UserCreatedDTO?, ErrorDTO?> responseDTO =
+                await _userService.GetUsersAsync(encryptedFilter);
+            responseDTO.Next = !string.IsNullOrEmpty(responseDTO.Next)
+                ? _encrypter.EncryptString(responseDTO.Next)
+                : null;
+            responseDTO.Previous = !string.IsNullOrEmpty(responseDTO.Previous)
+                ? _encrypter.EncryptString(responseDTO.Previous)
+                : null;
+            return CreateListResponse(responseDTO);
         }
     }
 }

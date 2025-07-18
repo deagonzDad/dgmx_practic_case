@@ -27,9 +27,9 @@ Follow these instructions to get the project up and running on your local machin
 ### Prerequisites
 
 - [.NET 8 SDK](https://dotnet.microsoft.com/download/dotnet/8.0)
-- [Docker](https://www.docker.com/products/docker-desktop) (Recommended, for using the devcontainer)
+- [Docker](https://www.docker.com/products/docker-desktop) (Recommended, for using the devcontainer or Docker Compose)
 
-### Installation & Setup
+### Local Development
 
 1.  **Clone the repository:**
 
@@ -37,38 +37,35 @@ Follow these instructions to get the project up and running on your local machin
     git clone <repository-url>
     cd dgmx_practic_case
     ```
-
-2.  **Open in Devcontainer (Recommended):**
-    If you are using Visual Studio Code, you will be prompted to "Reopen in Container". This will build the development environment with all necessary dependencies.
-
-3.  **Install Dependencies (if not using devcontainer):**
+2.  **Install Dependencies:**
     Restore the .NET packages for the solution.
 
     ```bash
     dotnet restore backend/backend.sln
     ```
-
-4.  **Database Migrations:**
+3.  **Database Migrations:**
     Apply the Entity Framework migrations to set up the database schema.
     ```bash
     dotnet ef database update --project backend/api
     ```
 
-### Running the Application
+4.  **Run the Application:**
+    To start the API, run the following command. By default, it will be accessible at `https://localhost:7053` and `http://localhost:5139`.
 
-To start the API, run the following command. By default, it will be accessible at `https://localhost:7053` and `http://localhost:5139`.
+    ```bash
+    dotnet run --project backend/api
+    ```
 
-```bash
-dotnet run --project backend/api
-```
+5.  **Running Tests:**
+    To run the full suite of unit tests, execute the following command from the root directory:
 
-### Running Tests
+    ```bash
+    dotnet test backend/backend.sln
+    ```
 
-To run the full suite of unit tests, execute the following command from the root directory:
+### Devcontainer (Recommended)
 
-```bash
-dotnet test backend/backend.sln
-```
+If you are using Visual Studio Code, you will be prompted to "Reopen in Container". This will build the development environment with all necessary dependencies, providing a consistent and isolated development environment.
 
 ## Running with Docker
 
@@ -169,6 +166,18 @@ Here is a summary of the main API endpoints available.
 - `POST /api/Reservation`: Create a new reservation.
 - `GET /api/Reservation/{IdRes}`: Get a specific reservation by its ID.
 
+## Code Style
+
+This project enforces consistent code style using **CSharpier** and **.editorconfig**.
+
+- **.editorconfig**: Defines basic code style rules (indentation, line endings, etc.) that most IDEs and editors will respect.
+- **CSharpier**: A code formatter that automatically formats C# code to a consistent style.
+
+To format the entire codebase and ensure adherence to the defined style, run the following command from the `backend` directory:
+
+```bash
+dotnet csharpier .
+```
 ## Project Structure
 
 The solution is organized into two main projects:

@@ -49,84 +49,63 @@ public class ReservationRepository(AppDbContext context) : IReservationRepositor
         FilterParamsDTO filterParams
     )
     {
-        // try
-        // {
-        IQueryable<Reservation> query = _context.Reservations.AsQueryable();
+        IQueryable<Reservation> query = _context
+            .Reservations.Include(r => r.User)
+            .Include(r => r.Room)
+            .AsNoTracking();
+
+        // Filtering
         if (!string.IsNullOrEmpty(filterParams.Filter))
         {
             string lowerCaseFilter = filterParams.Filter.ToLower();
-            query = query.Where(data =>
-                data.User.FirstName.Contains(lowerCaseFilter)
-                || data.User.LastName.Contains(lowerCaseFilter)
-                || data.Room.RoomNumber.ToString().Contains(lowerCaseFilter)
-            );
-        }
-        bool hasSortBy =
-            !string.IsNullOrEmpty(filterParams.SortBy)
-            && _allowedSortByProperties.Contains(filterParams.SortBy);
-        if (hasSortBy)
-        {
-            ParameterExpression parameter = Expression.Parameter(typeof(Reservation), "r");
-            MemberExpression property = Expression.Property(parameter, filterParams.SortBy!);
-            Expression<Func<Reservation, object>> lambda = Expression.Lambda<
-                Func<Reservation, object>
-            >(Expression.Convert(property, typeof(object)), parameter);
-            if (filterParams.SortOrder == 1)
+            if (int.TryParse(lowerCaseFilter, out int roomNumber))
             {
-                query = query.OrderBy(lambda);
+                query = query.Where(r => r.Room.RoomNumber == roomNumber);
             }
             else
             {
-                query = query.OrderByDescending(lambda);
+                query = query.Where(data =>
+                    data.User.FirstName.ToLower().Contains(lowerCaseFilter)
+                    || data.User.LastName.ToLower().Contains(lowerCaseFilter)
+                );
             }
         }
-        else
-        {
-            if (filterParams.SortOrder == 1)
-            {
-                query = query.OrderBy(r => r.Id);
-            }
-            else
-            {
-                query.OrderByDescending(r => r.Id);
-            }
-            filterParams.SortBy = _defaultSortBy;
-        }
-        if (
-            hasSortBy
-            && !filterParams.SortBy!.Equals(
-                nameof(Reservation.Id),
-                StringComparison.OrdinalIgnoreCase
+
+        // Sorting
+        var sortBy =
+            (
+                string.IsNullOrWhiteSpace(filterParams.SortBy)
+                || !_allowedSortByProperties.Contains(filterParams.SortBy)
             )
-        )
+                ? _defaultSortBy
+                : filterParams.SortBy;
+
+        var isDescending = filterParams.SortOrder == 0;
+
+        query = sortBy switch
         {
-            if (filterParams.SortOrder == 1)
-            {
-                query = ((IOrderedQueryable<Reservation>)query).ThenBy(r => r.Id);
-            }
-            else
-            {
-                query = ((IOrderedQueryable<Reservation>)query).ThenByDescending(r => r.Id);
-            }
-        }
+            nameof(Reservation.NumberOfGuests) => isDescending
+                ? query.OrderByDescending(r => r.NumberOfGuests)
+                : query.OrderBy(r => r.NumberOfGuests),
+            _ => isDescending ? query.OrderByDescending(r => r.Id) : query.OrderBy(r => r.Id),
+        };
+
+        query = ((IOrderedQueryable<Reservation>)query).ThenBy(r => r.Id);
+
         int totalCount = await query.CountAsync();
+
+        // Pagination
         if (
             !string.IsNullOrWhiteSpace(filterParams.Cursor)
             && int.TryParse(filterParams.Cursor, out int cursorId)
         )
         {
-            if (filterParams.SortOrder == 1)
-            {
-                query = query.Where(r => r.Id > cursorId);
-            }
-            else
-            {
-                query = query.Where(r => r.Id < cursorId);
-            }
+            query = isDescending
+                ? query.Where(r => r.Id < cursorId)
+                : query.Where(r => r.Id > cursorId);
         }
-        List<CreatedReservationListDTO> reservations = await query
-            .Include(r => r.User)
-            .Include(r => r.Room)
+
+        var reservations = await query
             .Select(r => new CreatedReservationListDTO
             {
                 ReservationId = r.Id,
@@ -138,32 +117,15 @@ public class ReservationRepository(AppDbContext context) : IReservationRepositor
             })
             .Take(filterParams.Limit + 1)
             .ToListAsync();
+
         bool hasMore = reservations.Count > filterParams.Limit;
         if (hasMore)
         {
             reservations.RemoveAt(reservations.Count - 1);
         }
-        int? nextLastId = hasMore ? reservations[^1].ReservationId : null;
-        return (reservations, nextLastId, totalCount);
+
+        int? nextCursor = hasMore ? reservations.LastOrDefault()?.ReservationId : null;
+
+        return (reservations, nextCursor, totalCount);
     }
-
-    // catch (Exception ex)
-    // {
-    //     throw;
-    // }
-
-    // public async Task<Reservation> UpdateReservation(Reservation reservation, int reservationId)
-    // {
-    //     try
-    //     {
-    //         Reservation reservationOld =
-    //             await _context.Reservations.FindAsync(reservationId)
-    //             ?? throw new ReservationNotFoundException(null);
-
-    //     }
-    //     catch (Exception ex)
-    //     {
-    //         throw new UpdateException(ex);
-    //     }
-    // }
 }

@@ -12,7 +12,7 @@ using Moq;
 
 namespace apiTest.Controllers;
 
-public class UserControllerTests : IClassFixture<TestFixture>
+public class UserControllerTests
 {
     private readonly TestFixture _fixture;
     private readonly UserController _sut;
@@ -20,9 +20,9 @@ public class UserControllerTests : IClassFixture<TestFixture>
     private readonly Mock<ILogger<UserController>> _loggerMock;
     private readonly Mock<IEncrypter> _encrypterMock;
 
-    public UserControllerTests(TestFixture fixture)
+    public UserControllerTests()
     {
-        _fixture = fixture;
+        _fixture = new TestFixture();
         _userServiceMock = _fixture.Freeze<Mock<IUserService>>();
         _loggerMock = _fixture.Freeze<Mock<ILogger<UserController>>>();
         _encrypterMock = _fixture.Freeze<Mock<IEncrypter>>();
@@ -93,8 +93,8 @@ public class UserControllerTests : IClassFixture<TestFixture>
         var actionResult = await _sut.GetUsersAsync(filterParams, token);
 
         // Assert
-        var statusCodeResult = Assert.IsType<ObjectResult>(actionResult.Result);
-        Assert.Equal(StatusCodes.Status500InternalServerError, statusCodeResult.StatusCode);
+        var statusCodeResult = Assert.IsType<BadRequestObjectResult>(actionResult.Result);
+        Assert.Equal(StatusCodes.Status400BadRequest, statusCodeResult.StatusCode);
         _userServiceMock.Verify(s => s.GetUsersAsync(It.IsAny<FilterParamsDTO>()), Times.Never);
     }
 }
