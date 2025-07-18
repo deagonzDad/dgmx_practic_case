@@ -76,81 +76,69 @@ public class RoomRepository(AppDbContext context) : IRoomRepository
 
     public async Task<(List<Room>, int?, int)> GetRoomsAsync(FilterParamsDTO filterParams)
     {
-        IQueryable<Room> query = _context.Rooms.AsQueryable().AsNoTracking();
+        IQueryable<Room> query = _context.Rooms.AsNoTracking();
+
+        // Filtering
         query = query.Where(data => data.IsActive == filterParams.IsActive);
-        if (!string.IsNullOrEmpty(filterParams.Filter))
-        {
-            string lowerCaseFilter = filterParams.Filter.ToLower();
-            query = query.Where(data => data.RoomNumber.ToString().Contains(lowerCaseFilter));
-        }
-        bool hasSortBy =
-            !string.IsNullOrWhiteSpace(filterParams.SortBy)
-            && _allowedSortByProperties.Contains(filterParams.SortBy);
-        if (hasSortBy)
-        {
-            ParameterExpression parameter = Expression.Parameter(typeof(Room), "r");
-            MemberExpression property = Expression.Property(parameter, filterParams.SortBy!);
-            Expression<Func<Room, object>> lambda = Expression.Lambda<Func<Room, object>>(
-                Expression.Convert(property, typeof(object)),
-                parameter
-            );
-            if (filterParams.SortOrder == 1)
-            {
-                query = query.OrderBy(lambda);
-            }
-            {
-                query = query.OrderByDescending(lambda);
-            }
-        }
-        else
-        {
-            if (filterParams.SortOrder == 1)
-            {
-                query = query.OrderBy(r => r.RoomNumber);
-            }
-            else
-            {
-                query = query.OrderByDescending(r => r.RoomNumber);
-            }
-            filterParams.SortBy = _defaultSortBy;
-        }
         if (
-            hasSortBy
-            && !filterParams.SortBy!.Equals(nameof(Room.Id), StringComparison.OrdinalIgnoreCase)
+            !string.IsNullOrEmpty(filterParams.Filter)
+            && int.TryParse(filterParams.Filter, out int roomNumber)
         )
         {
-            if (filterParams.SortOrder == 1)
-            {
-                query = ((IOrderedQueryable<Room>)query).ThenBy(r => r.Id);
-            }
-            else
-            {
-                query = ((IOrderedQueryable<Room>)query).ThenByDescending(r => r.Id);
-            }
+            query = query.Where(data => data.RoomNumber == roomNumber);
         }
+
+        // Sorting
+        var sortBy =
+            (
+                string.IsNullOrWhiteSpace(filterParams.SortBy)
+                || !_allowedSortByProperties.Contains(filterParams.SortBy)
+            )
+                ? _defaultSortBy
+                : filterParams.SortBy;
+
+        var isDescending = filterParams.SortOrder == 0;
+
+        query = sortBy switch
+        {
+            nameof(Room.RoomNumber) => isDescending
+                ? query.OrderByDescending(r => r.RoomNumber)
+                : query.OrderBy(r => r.RoomNumber),
+            nameof(Room.Id) => isDescending
+                ? query.OrderByDescending(r => r.Id)
+                : query.OrderBy(r => r.Id),
+            _ => isDescending
+                ? query.OrderByDescending(r => r.RoomNumber)
+                : query.OrderBy(r => r.RoomNumber),
+        };
+
+        // Secondary sort for consistent ordering
+        query = ((IOrderedQueryable<Room>)query).ThenBy(r => r.Id);
+
         int totalCount = await query.CountAsync();
+
+        // Pagination
         if (
             !string.IsNullOrWhiteSpace(filterParams.Cursor)
             && int.TryParse(filterParams.Cursor, out int cursorId)
         )
         {
-            if (filterParams.SortOrder == 1)
-            {
-                query = query.Where(r => r.Id > cursorId);
-            }
-            else
-            {
-                query = query.Where(r => r.Id < cursorId);
-            }
+            query = isDescending
+                ? query.Where(r => r.Id < cursorId)
+                : query.Where(r => r.Id > cursorId);
         }
-        List<Room> rooms = await query.Take(filterParams.Limit + 1).ToListAsync();
+
+        var rooms = await query.Take(filterParams.Limit + 1).ToListAsync();
+
         bool hasMore = rooms.Count > filterParams.Limit;
         if (hasMore)
         {
             rooms.RemoveAt(rooms.Count - 1);
         }
-        int? nextLastId = hasMore ? rooms[^1].Id : null;
-        return (rooms, nextLastId, totalCount);
+
+        int? nextCursor = hasMore ? rooms.LastOrDefault()?.Id : null;
+
+        return (rooms, nextCursor, totalCount);
     }
 
     public async Task<Room> UpdateRoomAsync(Room updatedRoom, int roomId)

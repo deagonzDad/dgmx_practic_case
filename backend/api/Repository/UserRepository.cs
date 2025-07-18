@@ -51,102 +51,90 @@ public class UserRepository(AppDbContext context) : IUserRepository
 
     public async Task CreateUserAsync(User user)
     {
-        try
-        {
-            await _context.Users.AddAsync(user);
-            await _context.SaveChangesAsync();
-        }
-        catch (DbUpdateException ex)
-        {
-            var innerException = ex.InnerException;
-            if (innerException is SqliteException sqliteEx && sqliteEx.SqliteErrorCode == 19)
-                throw new AlreadyExistException(ex);
-            throw new UpdateException(ex);
-        }
+        await _context.Users.AddAsync(user);
+        await _context.SaveChangesAsync();
     }
 
     public async Task<(List<User>, int?, int)> GetUsersAsync(FilterParamsDTO filterParamsDTO)
     {
-        try
-        {
-            IQueryable<User> usersQuery = _context.Users.AsQueryable().AsNoTracking();
-            usersQuery = usersQuery.Where(data => data.IsActive == filterParamsDTO.IsActive);
-            if (!string.IsNullOrEmpty(filterParamsDTO.Filter))
-            {
-                string filterText = $"%{filterParamsDTO.Filter.ToLower()}%";
-                usersQuery = usersQuery.Where(data =>
-                    EF.Functions.Like(data.Id.ToString(), filterText)
-                    || EF.Functions.Like(data.FirstName.ToLower(), filterText)
-                    || EF.Functions.Like(data.LastName.ToLower(), filterText)
-                    || EF.Functions.Like(data.Email.ToLower(), filterText)
-                    || EF.Functions.Like(data.Username.ToLower(), filterText)
-                );
-            }
-            int totalCount = await usersQuery.CountAsync();
-            bool hasSortBy =
-                !string.IsNullOrWhiteSpace(filterParamsDTO.SortBy)
-                && _allowedSortByProperties.Contains(filterParamsDTO.SortBy);
-            int sortOrder = filterParamsDTO.SortOrder;
-            if (hasSortBy)
-            {
-                ParameterExpression parameter = Expression.Parameter(typeof(User), "u");
-                MemberExpression expression = Expression.Property(
-                    parameter,
-                    filterParamsDTO.SortBy!
-                );
-                Expression<Func<User, object>> lambda = Expression.Lambda<Func<User, object>>(
-                    Expression.Convert(expression, typeof(object)),
-                    parameter
-                );
+        IQueryable<User> usersQuery = _context.Users.AsNoTracking();
+        usersQuery = usersQuery.Where(data => data.IsActive == filterParamsDTO.IsActive);
 
-                if (sortOrder == 1)
-                    usersQuery = usersQuery.OrderBy(lambda);
-                else
-                    usersQuery = usersQuery.OrderByDescending(lambda);
-            }
-            else
-            {
-                if (sortOrder == 1)
-                    usersQuery = usersQuery.OrderBy(u => u.Id);
-                else
-                    usersQuery = usersQuery.OrderByDescending(u => u.Id);
-                filterParamsDTO.SortBy = _defaultSortBy;
-            }
-            if (
-                hasSortBy
-                && !filterParamsDTO.SortBy!.Equals(
-                    nameof(User.Id),
-                    StringComparison.OrdinalIgnoreCase
-                )
-            )
-            {
-                if (sortOrder == 1)
-                    usersQuery = ((IOrderedQueryable<User>)usersQuery).ThenBy(u => u.Id);
-                else
-                    usersQuery = ((IOrderedQueryable<User>)usersQuery).ThenByDescending(u => u.Id);
-            }
-
-            if (
-                !string.IsNullOrWhiteSpace(filterParamsDTO.Cursor)
-                && int.TryParse(filterParamsDTO.Cursor, out int cursorId)
-            )
-            {
-                if (sortOrder == 1)
-                    usersQuery = usersQuery.Where(u => u.Id > cursorId);
-                else
-                    usersQuery = usersQuery.Where(u => u.Id < cursorId);
-            }
-            List<User> userList = await usersQuery.Take(filterParamsDTO.Limit + 1).ToListAsync();
-            bool hasMore = userList.Count > filterParamsDTO.Limit;
-            if (hasMore)
-                userList.RemoveAt(userList.Count - 1);
-            int? nextLastId = hasMore ? userList[^1].Id : null;
-            return (userList, nextLastId, totalCount);
-        }
-        catch (DbUpdateException ex)
+        if (!string.IsNullOrEmpty(filterParamsDTO.Filter))
         {
-            throw new UpdateException(ex);
+            string filterText = $"%{filterParamsDTO.Filter.ToLower()}%";
+            usersQuery = usersQuery.Where(data =>
+                EF.Functions.Like(data.Id.ToString(), filterText)
+                || EF.Functions.Like(data.FirstName.ToLower(), filterText)
+                || EF.Functions.Like(data.LastName.ToLower(), filterText)
+                || EF.Functions.Like(data.Email.ToLower(), filterText)
+                || EF.Functions.Like(data.Username.ToLower(), filterText)
+            );
         }
-        throw new NotImplementedException();
+
+        int totalCount = await usersQuery.CountAsync();
+
+        var sortBy =
+            (
+                string.IsNullOrWhiteSpace(filterParamsDTO.SortBy)
+                || !_allowedSortByProperties.Contains(filterParamsDTO.SortBy)
+            )
+                ? _defaultSortBy
+                : filterParamsDTO.SortBy;
+
+        var isDescending = filterParamsDTO.SortOrder == 0;
+
+        usersQuery = sortBy switch
+        {
+            nameof(User.FirstName) => isDescending
+                ? usersQuery.OrderByDescending(u => u.FirstName)
+                : usersQuery.OrderBy(u => u.FirstName),
+            nameof(User.LastName) => isDescending
+                ? usersQuery.OrderByDescending(u => u.LastName)
+                : usersQuery.OrderBy(u => u.LastName),
+            nameof(User.Username) => isDescending
+                ? usersQuery.OrderByDescending(u => u.Username)
+                : usersQuery.OrderBy(u => u.Username),
+            nameof(User.Email) => isDescending
+                ? usersQuery.OrderByDescending(u => u.Email)
+                : usersQuery.OrderBy(u => u.Email),
+            _ => isDescending
+                ? usersQuery.OrderByDescending(u => u.Id)
+                : usersQuery.OrderBy(u => u.Id),
+        };
+
+        usersQuery = ((IOrderedQueryable<User>)usersQuery).ThenBy(u => u.Id);
+
+        if (
+            !string.IsNullOrWhiteSpace(filterParamsDTO.Cursor)
+            && int.TryParse(filterParamsDTO.Cursor, out int cursorId)
+        )
+        {
+            usersQuery = isDescending
+                ? usersQuery.Where(u => u.Id < cursorId)
+                : usersQuery.Where(u => u.Id > cursorId);
+        }
+
+        List<User> userList = await usersQuery.Take(filterParamsDTO.Limit + 1).ToListAsync();
+
+        bool hasMore = userList.Count > filterParamsDTO.Limit;
+        if (hasMore)
+        {
+            userList.RemoveAt(userList.Count - 1);
+        }
+
+        int? nextLastId = hasMore ? userList.LastOrDefault()?.Id : null;
+
+        return (userList, nextLastId, totalCount);
     }
 }
+//  Future Recommendations
+
+//    * Pagination Abstraction: As mentioned before, the pagination logic (especially the cursor
+//      encryption/decryption) is still in the controllers. Moving this to the service layer would be a good next
+//       step to improve separation of concerns.
+//    * Full-Text Search: For the UserRepository, the use of EF.Functions.Like with leading wildcards will not
+//      perform well on large datasets. If this is a concern, implementing a proper full-text search solution
+//      (like a dedicated search index) would be a major improvement.
+//    * Configuration Validation: The JWT configuration in ServiceExtensions.cs could be made more robust by
+//      adding validation to ensure that the required configuration values are present at application startup.
